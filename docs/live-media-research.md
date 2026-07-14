@@ -100,3 +100,5 @@ QEMU_GL=1 ./scripts/run-bootstrap-qemu.sh path/to/image.img
 ```
 
 That switches to `virtio-vga-gl` with `gtk,gl=on` for testing Hyprland in a VM.
+In fish, export it first with `set -x QEMU_GL 1`, run the helper, then clear it
+with `set -e QEMU_GL`.

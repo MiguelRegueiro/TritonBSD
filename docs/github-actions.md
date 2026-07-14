@@ -74,13 +74,19 @@ shell but Hyprland exits, retry the same decompressed image with GL enabled:
 
 ```fish
 set RUN 29367425435
-QEMU_GL=1 ./scripts/run-bootstrap-qemu.sh artifacts/$RUN/TritonBSD-15.1-RELEASE-amd64-live-memstick.img
+set -x QEMU_GL 1
+./scripts/run-bootstrap-qemu.sh artifacts/$RUN/TritonBSD-15.1-RELEASE-amd64-live-memstick.img
+set -e QEMU_GL
 ```
 
 For boot logs in a file:
 
 ```fish
-QEMU_GL=1 QEMU_SERIAL=log ./scripts/run-bootstrap-qemu.sh artifacts/$RUN/TritonBSD-15.1-RELEASE-amd64-live-memstick.img
+set -x QEMU_GL 1
+set -x QEMU_SERIAL log
+./scripts/run-bootstrap-qemu.sh artifacts/$RUN/TritonBSD-15.1-RELEASE-amd64-live-memstick.img
+set -e QEMU_GL
+set -e QEMU_SERIAL
 tail -f artifacts/qemu-serial.log
 ```
 
