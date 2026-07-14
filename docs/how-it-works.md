@@ -78,13 +78,25 @@ The Triton overlay contains things that must exist before install:
 /usr/local/share/triton/skel
 ```
 
-The live session should not depend on `/root/.profile`. It should configure the
-boot path directly through `/etc/rc`, `/etc/rc.local`, `gettytab`, `ttys`, or a
-small purpose-built ramdisk. After boot it should auto-login to a temporary
-`triton` user and start:
+The live session must not depend on `/root/.profile`. The current implementation
+uses the simpler TrueOS/GhostBSD-style handoff:
+
+```text
+/etc/rc.local
+  -> starts required live services
+  -> exits without launching bsdinstall
+/etc/gettytab + /etc/ttys
+  -> autologin triton on ttyv0
+/home/triton/.profile
+  -> exec /usr/local/sbin/triton-live-start
+/usr/local/sbin/triton-live-start
+  -> run /home/triton/.start-hyprland
+```
+
+That should auto-login to a temporary `triton` user and start:
 
 ```sh
-ck-launch-session dbus-run-session start-hyprland
+dbus-run-session Hyprland
 ```
 
 The installed system should create the real user, copy the Triton skeleton into

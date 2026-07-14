@@ -38,8 +38,8 @@ Required pieces:
 3. Create a `triton` live user in the image.
 4. Copy the desktop skeleton into `/home/triton`.
 5. Enable required services in the image.
-6. Configure `/etc/rc`, `/etc/rc.local`, `gettytab`, and `ttys` so the live boot
-   path starts the Triton session instead of the stock installer.
+6. Configure `/etc/rc.local`, `gettytab`, and `ttys` so the live boot path starts
+   the Triton session instead of the stock installer.
 7. Keep `triton-install` as an application launched from inside the live
    desktop.
 
@@ -69,4 +69,13 @@ Expected first artifact:
 
 ```text
 TritonBSD-15.1-RELEASE-amd64-live-memstick.img.xz
+```
+
+Expected boot path:
+
+```text
+FreeBSD boot loader
+  -> rc.local starts dbus/seatd and does not run bsdinstall
+  -> ttyv0 autologins as triton
+  -> /usr/local/sbin/triton-live-start starts Hyprland
 ```

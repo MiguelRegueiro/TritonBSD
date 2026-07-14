@@ -60,7 +60,7 @@ if ! chroot "$ROOT" /usr/sbin/pw usershow triton >/dev/null 2>&1; then
     chroot "$ROOT" /usr/sbin/pw useradd triton -u 1000 -d /home/triton -m -s /bin/sh
 fi
 
-for group in wheel operator video; do
+for group in wheel operator video seatd realtime; do
     if chroot "$ROOT" /usr/sbin/pw groupshow "$group" >/dev/null 2>&1; then
         chroot "$ROOT" /usr/sbin/pw groupmod "$group" -m triton
     fi
@@ -93,37 +93,11 @@ chroot "$ROOT" /usr/sbin/chown -R triton:triton /home/triton
 echo "Enabling live desktop services"
 sysrc -f "$ROOT/etc/rc.conf" dbus_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" seatd_enable=YES
+sysrc -f "$ROOT/etc/rc.conf" devfs_enable=YES
+sysrc -f "$ROOT/etc/rc.conf" devfs_system_ruleset=devfsrules_common
 sysrc -f "$ROOT/etc/rc.conf" powerd_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" powerd_flags="-a hiadaptive -b adaptive -n adaptive"
 
-mkdir -p "$ROOT/root"
-if [ -f "$ROOT/root/.profile" ] && [ ! -f "$ROOT/root/.profile.freebsd-installer" ]; then
-    cp "$ROOT/root/.profile" "$ROOT/root/.profile.freebsd-installer"
-fi
-
-cat > "$ROOT/root/.profile" <<'EOF'
-PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
-export PATH
-
-if [ -x /usr/local/sbin/triton-live-start ]; then
-    exec /usr/local/sbin/triton-live-start
-fi
-
-exec bsdinstall
-EOF
-
-if [ -f "$ROOT/root/.login" ] && [ ! -f "$ROOT/root/.login.freebsd-installer" ]; then
-    cp "$ROOT/root/.login" "$ROOT/root/.login.freebsd-installer"
-fi
-
-cat > "$ROOT/root/.login" <<'EOF'
-setenv PATH /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
-
-if ( -x /usr/local/sbin/triton-live-start ) then
-    exec /usr/local/sbin/triton-live-start
-endif
-
-exec bsdinstall
-EOF
+"$PROJECT_DIR/build/configure-live-boot.sh" "$ROOT"
 
 echo "Triton live setup complete"

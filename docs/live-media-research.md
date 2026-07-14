@@ -66,15 +66,16 @@ stock memstick hook.
 Recommended MVP:
 
 1. Keep `Build Bootstrap Image` only as a smoke test for image mounting.
-2. Replace the live workflow internals with a new live image path:
+2. Use a TrueOS-style handoff for the next test image:
+   - replace the stock installer `/etc/rc.local`
+   - start live services there
+   - configure `gettytab` and `ttys` to autologin `triton` on `ttyv0`
+   - start Hyprland from the live user's profile
+3. Replace the live workflow internals with a new live image path:
    - create a FreeBSD root filesystem tree
    - install FreeBSD base plus packages into that root
    - add Triton desktop config, live user, services, and `triton-install`
    - build boot media around that root
-3. For first success, use a simple rc.d path:
-   - mount writable tmpfs for volatile paths
-   - autologin `triton` on `ttyv0`
-   - run `dbus-run-session Hyprland` from the live user's startup
 4. Once the live desktop starts reliably, replace the installer placeholder with
    a real `triton-install` frontend that drives FreeBSD install primitives.
 

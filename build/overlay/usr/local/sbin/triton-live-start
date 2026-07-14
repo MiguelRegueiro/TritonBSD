@@ -3,35 +3,52 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 export PATH
 
+LOG="${TRITON_LIVE_LOG:-/tmp/triton-live.log}"
+
+if [ "$(id -u)" -eq 0 ]; then
+    {
+        echo "==== Triton live startup as root $(date) ===="
+        uname -a
+        id triton || true
+        echo "Starting required services"
+    } >> "$LOG" 2>&1
+
+    mkdir -p /tmp/triton-runtime
+    chown triton:triton /tmp/triton-runtime 2>/dev/null || true
+    chmod 700 /tmp/triton-runtime 2>/dev/null || true
+
+    service dbus onestart >> "$LOG" 2>&1 || true
+    service seatd onestart >> "$LOG" 2>&1 || true
+
+    exec su -l triton -c /usr/local/sbin/triton-live-start
+fi
+
 clear
 {
-    echo "==== Triton live startup $(date) ===="
+    echo "==== Triton live user session $(date) ===="
     uname -a
-    id triton || true
+    id
+    tty || true
     echo
-} >/tmp/triton-live.log 2>&1
+} >> "$LOG" 2>&1
 
 echo "Starting Triton live desktop..."
-echo "Log: /tmp/triton-live.log"
+echo "Log: $LOG"
 echo
 
-service dbus onestart >>/tmp/triton-live.log 2>&1 || true
-service seatd onestart >>/tmp/triton-live.log 2>&1 || true
-
 if [ -x /home/triton/.start-hyprland ]; then
-    su -l triton -c /home/triton/.start-hyprland >>/tmp/triton-live.log 2>&1
+    /home/triton/.start-hyprland >> "$LOG" 2>&1
     status=$?
     echo
     echo "Triton desktop exited with status $status."
     echo "Last log lines:"
-    tail -40 /tmp/triton-live.log
+    tail -40 "$LOG"
 else
     echo "Missing /home/triton/.start-hyprland"
-    echo "Missing /home/triton/.start-hyprland" >>/tmp/triton-live.log
+    echo "Missing /home/triton/.start-hyprland" >> "$LOG"
 fi
 
 echo
-echo "Falling back to the FreeBSD installer."
-echo "Open shell and inspect /tmp/triton-live.log if the desktop did not start."
-sleep 20
-exec bsdinstall
+echo "You are in the TritonBSD live shell."
+echo "Run triton-install to start the installer."
+exec /bin/sh -i

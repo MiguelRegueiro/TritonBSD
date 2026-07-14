@@ -26,6 +26,7 @@ jobs:
             freebsd-version
             uname -a
             sh -n build/fetch-freebsd-src.sh
+            sh -n build/configure-live-boot.sh
             sh -n build/build-release.sh
             sh -n build/build-remix-image.sh
             sh -n build/live-setup.sh
