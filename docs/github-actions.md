@@ -45,6 +45,30 @@ This should boot like FreeBSD's normal memstick image, but with:
 It will not yet boot straight into Hyprland. That comes after we add desktop
 package installation into the live root and configure live-user startup.
 
+## Download And Test An Artifact
+
+Use the helper script instead of downloading artifacts from the browser. It uses
+the GitHub API plus `curl --progress-bar`, then extracts and decompresses the
+image with verbose `xz` output.
+
+```sh
+./scripts/download-live-artifact.sh 29367425435
+./scripts/run-bootstrap-qemu.sh artifacts/29367425435/TritonBSD-15.1-RELEASE-amd64-live-memstick.img
+```
+
+Or download, decompress, and boot in one command:
+
+```sh
+./scripts/download-live-artifact.sh --boot 29367425435
+```
+
+With fish:
+
+```fish
+set RUN 29367425435
+./scripts/download-live-artifact.sh --boot $RUN
+```
+
 ## Full Image Later
 
 For the real TritonBSD image, use one of these:
