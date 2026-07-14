@@ -68,9 +68,22 @@ trap cleanup EXIT INT TERM
 
 MD=$(mdconfig -a -t vnode -f "$TRITON_IMAGE")
 echo "Attached image as /dev/$MD"
+echo "Top-level partition table:"
 gpart show -p "$MD"
 
 ROOT_PART=$(gpart show -p "$MD" | awk '$4 == "freebsd-ufs" { print "/dev/" $3; exit }')
+if [ -z "$ROOT_PART" ]; then
+    FREEBSD_SLICE=$(gpart show -p "$MD" | awk '$4 == "freebsd" { print $3; exit }')
+    if [ -n "$FREEBSD_SLICE" ]; then
+        echo "Nested BSD label in /dev/$FREEBSD_SLICE:"
+        gpart show -p "$FREEBSD_SLICE"
+        ROOT_PART=$(gpart show -p "$FREEBSD_SLICE" | awk '$4 == "freebsd-ufs" { print "/dev/" $3; exit }')
+        if [ -z "$ROOT_PART" ] && [ -e "/dev/${FREEBSD_SLICE}a" ]; then
+            ROOT_PART="/dev/${FREEBSD_SLICE}a"
+        fi
+    fi
+fi
+
 if [ -z "$ROOT_PART" ]; then
     echo "Could not find a freebsd-ufs root partition in /dev/$MD" >&2
     exit 1
