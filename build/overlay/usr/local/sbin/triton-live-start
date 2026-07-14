@@ -1,0 +1,23 @@
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+export PATH
+
+clear
+echo "Starting Triton live desktop..."
+echo
+
+if [ -x /home/triton/.start-hyprland ]; then
+    su -l triton -c /home/triton/.start-hyprland
+    status=$?
+    echo
+    echo "Triton desktop exited with status $status."
+else
+    echo "Missing /home/triton/.start-hyprland"
+fi
+
+echo
+echo "Falling back to the FreeBSD installer."
+sleep 3
+exec bsdinstall
+

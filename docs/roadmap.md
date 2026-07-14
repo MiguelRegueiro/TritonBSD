@@ -43,3 +43,21 @@ If that happens, the next build step must grow the image and filesystem before
 installing packages, or switch from remixing the official memstick to building a
 larger release image with FreeBSD's release tooling.
 
+## Workflow
+
+The next test workflow is `Build Live Desktop Image`. It is manual because it is
+larger and slower than the bootstrap build.
+
+It sets:
+
+```text
+TRITON_WITH_LIVE_DESKTOP=1
+TRITON_IMAGE_FLAVOR=live
+TRITON_IMAGE_SIZE=6G
+```
+
+Expected first artifact:
+
+```text
+TritonBSD-15.1-RELEASE-amd64-live-memstick.img.xz
+```

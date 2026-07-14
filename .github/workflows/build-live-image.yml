@@ -1,0 +1,41 @@
+name: Build Live Desktop Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build TritonBSD live desktop memstick in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        env:
+          TRITON_WITH_LIVE_DESKTOP: "1"
+          TRITON_IMAGE_FLAVOR: live
+          TRITON_IMAGE_SIZE: 6G
+        with:
+          release: "15.1"
+          usesh: true
+          sync: rsync
+          mem: 8192
+          cpu: 4
+          run: |
+            freebsd-version
+            uname -a
+            ./build/build-remix-image.sh
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tritonbsd-live-memstick
+          path: artifacts/*.img.xz
+          if-no-files-found: error
+          retention-days: 7

@@ -32,7 +32,8 @@ jobs:
             sh -n build/fetch-freebsd-src.sh
             sh -n build/build-release.sh
             sh -n build/build-remix-image.sh
+            sh -n build/live-setup.sh
             sh -n installer/triton-install
             sh -n build/overlay/usr/local/bin/triton-install
             sh -n build/overlay/usr/local/libexec/triton/triton-install
-
+            sh -n build/overlay/usr/local/sbin/triton-live-start
