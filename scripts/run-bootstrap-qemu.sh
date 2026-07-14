@@ -30,7 +30,8 @@ case "$QEMU_BOOT_MODE" in
             $KVM_ARGS \
             -machine q35 \
             -m "$QEMU_MEM" \
-            -drive "file=$IMG,format=raw,if=virtio,bootindex=1" \
+            -drive "if=none,id=stick,format=raw,file=$IMG" \
+            -device virtio-blk-pci,drive=stick,bootindex=1 \
             -netdev user,id=net0 \
             -device e1000,netdev=net0
         ;;
