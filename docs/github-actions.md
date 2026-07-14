@@ -17,6 +17,8 @@ verifies the SHA512 checksum, mounts it with FreeBSD tools, injects the Triton
 overlay, compresses the result, and uploads it as a workflow artifact.
 
 The artifact is a `.img.xz` memstick image, not a final desktop ISO yet.
+It still shows the normal FreeBSD installer. That is expected for the bootstrap
+stage.
 
 ## Why Bootstrap First
 
@@ -57,4 +59,3 @@ Then run the source-build path:
 ./build/fetch-freebsd-src.sh
 ./build/build-release.sh
 ```
-
