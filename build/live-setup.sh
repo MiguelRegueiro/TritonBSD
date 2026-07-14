@@ -37,6 +37,7 @@ env ASSUME_ALWAYS_YES=yes pkg -r "$ROOT" update -f
 
 echo "Installing Triton live packages"
 xargs env ASSUME_ALWAYS_YES=yes pkg -r "$ROOT" install -y < "$PKGLIST"
+env ASSUME_ALWAYS_YES=yes pkg -r "$ROOT" clean -ay
 
 if ! command -v git >/dev/null 2>&1; then
     echo "Installing git on the builder for sparse dotfile checkout"
