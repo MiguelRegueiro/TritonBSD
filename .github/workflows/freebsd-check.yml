@@ -1,0 +1,38 @@
+name: FreeBSD Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run checks in FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "15.1"
+          usesh: true
+          sync: rsync
+          copyback: false
+          run: |
+            freebsd-version
+            uname -a
+            sh -n build/fetch-freebsd-src.sh
+            sh -n build/build-release.sh
+            sh -n build/build-remix-image.sh
+            sh -n installer/triton-install
+            sh -n build/overlay/usr/local/bin/triton-install
+            sh -n build/overlay/usr/local/libexec/triton/triton-install
+

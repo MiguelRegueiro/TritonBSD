@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+cat <<'EOF'
+Triton installer is not implemented yet.
+
+MVP installer flow:
+  1. list disks
+  2. choose target disk
+  3. confirm destructive install
+  4. create UEFI + GPT + UFS layout
+  5. install FreeBSD base with bsdinstall
+  6. install Triton packages from /usr/local/share/triton/pkglist
+  7. create user and copy Triton desktop skeleton
+
+Read docs/how-it-works.md before implementing this.
+EOF
+

@@ -1,0 +1,7 @@
+artifacts/
+work/
+*.img
+*.img.xz
+*.iso
+*.iso.xz
+
