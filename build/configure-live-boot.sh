@@ -36,6 +36,9 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 export PATH
 
 LOG=/tmp/triton-live.log
+touch "$LOG"
+chown triton:triton "$LOG" 2>/dev/null || true
+chmod 664 "$LOG" 2>/dev/null || true
 
 {
     echo "==== Triton live rc.local $(date) ===="

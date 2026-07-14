@@ -6,6 +6,10 @@ export PATH
 LOG="${TRITON_LIVE_LOG:-/tmp/triton-live.log}"
 
 if [ "$(id -u)" -eq 0 ]; then
+    touch "$LOG"
+    chown triton:triton "$LOG" 2>/dev/null || true
+    chmod 664 "$LOG" 2>/dev/null || true
+
     {
         echo "==== Triton live startup as root $(date) ===="
         uname -a
@@ -21,6 +25,11 @@ if [ "$(id -u)" -eq 0 ]; then
     service seatd onestart >> "$LOG" 2>&1 || true
 
     exec su -l triton -c /usr/local/sbin/triton-live-start
+fi
+
+if [ ! -w "$LOG" ]; then
+    LOG="/tmp/triton-live-$(id -un).log"
+    touch "$LOG" 2>/dev/null || LOG="/dev/null"
 fi
 
 clear
