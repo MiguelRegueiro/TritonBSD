@@ -129,7 +129,14 @@ cat > "$TRITON_HOME/.start-hyprland" <<'EOF'
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 export PATH
 
+export HOME="${HOME:-/home/triton}"
+export USER="${USER:-triton}"
+export LOGNAME="${LOGNAME:-triton}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/triton-runtime}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=Hyprland
 export XDG_CURRENT_DESKTOP=Hyprland
@@ -138,7 +145,13 @@ export MOZ_ENABLE_WAYLAND=1
 export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-seatd}"
 export WLR_RENDERER_ALLOW_SOFTWARE="${WLR_RENDERER_ALLOW_SOFTWARE:-1}"
 
-mkdir -p "$XDG_RUNTIME_DIR"
+mkdir -p \
+    "$XDG_RUNTIME_DIR" \
+    "$XDG_CONFIG_HOME" \
+    "$XDG_CACHE_HOME" \
+    "$XDG_CACHE_HOME/hyprland" \
+    "$XDG_DATA_HOME" \
+    "$XDG_STATE_HOME"
 chmod 700 "$XDG_RUNTIME_DIR"
 
 if command -v Hyprland >/dev/null 2>&1; then
