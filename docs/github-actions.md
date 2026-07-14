@@ -69,6 +69,21 @@ set RUN 29367425435
 ./scripts/download-live-artifact.sh --boot $RUN
 ```
 
+Hyprland may need 3D acceleration in QEMU. If the image reaches the Triton live
+shell but Hyprland exits, retry the same decompressed image with GL enabled:
+
+```fish
+set RUN 29367425435
+QEMU_GL=1 ./scripts/run-bootstrap-qemu.sh artifacts/$RUN/TritonBSD-15.1-RELEASE-amd64-live-memstick.img
+```
+
+For boot logs in a file:
+
+```fish
+QEMU_GL=1 QEMU_SERIAL=log ./scripts/run-bootstrap-qemu.sh artifacts/$RUN/TritonBSD-15.1-RELEASE-amd64-live-memstick.img
+tail -f artifacts/qemu-serial.log
+```
+
 ## Full Image Later
 
 For the real TritonBSD image, use one of these:

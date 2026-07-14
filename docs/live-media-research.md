@@ -83,3 +83,20 @@ Longer term, the GhostBSD ZFS-in-RAM model is the cleaner live experience, but
 it requires more memory and more build plumbing. A smaller first Triton version
 can use an installed-style UFS root or a writable overlay, then move to the
 GhostBSD model once the desktop and installer are proven.
+
+## Hyprland Live Session Notes
+
+The FreeBSD Handbook's Wayland chapter says `seatd` must be enabled and running
+before starting the compositor because it brokers non-root access to shared
+devices, including graphics devices. It also calls out `XDG_RUNTIME_DIR` as a
+runtime directory that must be writable and suitable for Wayland clients.
+
+Hyprland's upstream documentation warns that VM usage needs 3D acceleration in
+the virtual GPU configuration. The QEMU helper therefore keeps the stable
+default display path, but also supports:
+
+```sh
+QEMU_GL=1 ./scripts/run-bootstrap-qemu.sh path/to/image.img
+```
+
+That switches to `virtio-vga-gl` with `gtk,gl=on` for testing Hyprland in a VM.

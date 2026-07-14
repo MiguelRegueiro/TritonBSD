@@ -2,6 +2,15 @@ dbus
 seatd
 consolekit2
 polkit
+drm-61-kmod
+libglvnd
+mesa-dri
+mesa-libs
+libinput
+libxkbcommon
+hwdata
+libdisplay-info
+libliftoff
 hyprland
 hypridle
 hyprlock

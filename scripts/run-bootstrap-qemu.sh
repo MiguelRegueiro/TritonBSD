@@ -14,6 +14,7 @@ fi
 QEMU_BIN="${QEMU_BIN:-qemu-system-x86_64}"
 QEMU_MEM="${QEMU_MEM:-4096}"
 QEMU_BOOT_MODE="${QEMU_BOOT_MODE:-virtio}"
+QEMU_GL="${QEMU_GL:-0}"
 QEMU_SERIAL="${QEMU_SERIAL:-none}"
 QEMU_SERIAL_LOG="${QEMU_SERIAL_LOG:-$PROJECT_DIR/artifacts/qemu-serial.log}"
 
@@ -46,6 +47,21 @@ case "$QEMU_SERIAL" in
         ;;
 esac
 
+case "$QEMU_GL" in
+    0|1)
+        ;;
+    *)
+        echo "Unsupported QEMU_GL: $QEMU_GL" >&2
+        echo "Use QEMU_GL=0 or QEMU_GL=1." >&2
+        exit 1
+        ;;
+esac
+
+if [ "$QEMU_GL" = "1" ] && [ "$QEMU_BOOT_MODE" != "virtio" ]; then
+    echo "QEMU_GL=1 currently requires QEMU_BOOT_MODE=virtio." >&2
+    exit 1
+fi
+
 IMAGE_SIZE=$(du -h "$IMG" | awk '{ print $1 }')
 
 echo "TritonBSD QEMU runner"
@@ -54,6 +70,7 @@ echo "  size:       $IMAGE_SIZE"
 echo "  boot mode:  $QEMU_BOOT_MODE"
 echo "  memory:     ${QEMU_MEM} MiB"
 echo "  kvm:        $KVM_MODE"
+echo "  gl:         $QEMU_GL"
 echo "  serial:     $QEMU_SERIAL"
 if [ "$QEMU_SERIAL" = "none" ]; then
     echo "  debug:      use QEMU_SERIAL=stdio or QEMU_SERIAL=log for guest serial output"
@@ -83,43 +100,86 @@ run_qemu() {
 
 case "$QEMU_BOOT_MODE" in
     virtio)
-        case "$QEMU_SERIAL" in
-            none)
-                run_qemu "$QEMU_BIN" \
-                    $KVM_ARGS \
-                    -machine q35 \
-                    -m "$QEMU_MEM" \
-                    -vga virtio \
-                    -drive "if=none,id=stick,format=raw,file=$IMG" \
-                    -device virtio-blk-pci,drive=stick,bootindex=1 \
-                    -netdev user,id=net0 \
-                    -device e1000,netdev=net0
-                ;;
-            stdio)
-                run_qemu "$QEMU_BIN" \
-                    $KVM_ARGS \
-                    -machine q35 \
-                    -m "$QEMU_MEM" \
-                    -vga virtio \
-                    -drive "if=none,id=stick,format=raw,file=$IMG" \
-                    -device virtio-blk-pci,drive=stick,bootindex=1 \
-                    -netdev user,id=net0 \
-                    -device e1000,netdev=net0 \
-                    -serial stdio
-                ;;
-            log)
-                run_qemu "$QEMU_BIN" \
-                    $KVM_ARGS \
-                    -machine q35 \
-                    -m "$QEMU_MEM" \
-                    -vga virtio \
-                    -drive "if=none,id=stick,format=raw,file=$IMG" \
-                    -device virtio-blk-pci,drive=stick,bootindex=1 \
-                    -netdev user,id=net0 \
-                    -device e1000,netdev=net0 \
-                    -serial "file:$QEMU_SERIAL_LOG"
-                ;;
-        esac
+        if [ "$QEMU_GL" = "1" ]; then
+            case "$QEMU_SERIAL" in
+                none)
+                    run_qemu "$QEMU_BIN" \
+                        $KVM_ARGS \
+                        -machine q35 \
+                        -m "$QEMU_MEM" \
+                        -display gtk,gl=on \
+                        -device virtio-vga-gl \
+                        -drive "if=none,id=stick,format=raw,file=$IMG" \
+                        -device virtio-blk-pci,drive=stick,bootindex=1 \
+                        -netdev user,id=net0 \
+                        -device e1000,netdev=net0
+                    ;;
+                stdio)
+                    run_qemu "$QEMU_BIN" \
+                        $KVM_ARGS \
+                        -machine q35 \
+                        -m "$QEMU_MEM" \
+                        -display gtk,gl=on \
+                        -device virtio-vga-gl \
+                        -drive "if=none,id=stick,format=raw,file=$IMG" \
+                        -device virtio-blk-pci,drive=stick,bootindex=1 \
+                        -netdev user,id=net0 \
+                        -device e1000,netdev=net0 \
+                        -serial stdio
+                    ;;
+                log)
+                    run_qemu "$QEMU_BIN" \
+                        $KVM_ARGS \
+                        -machine q35 \
+                        -m "$QEMU_MEM" \
+                        -display gtk,gl=on \
+                        -device virtio-vga-gl \
+                        -drive "if=none,id=stick,format=raw,file=$IMG" \
+                        -device virtio-blk-pci,drive=stick,bootindex=1 \
+                        -netdev user,id=net0 \
+                        -device e1000,netdev=net0 \
+                        -serial "file:$QEMU_SERIAL_LOG"
+                    ;;
+            esac
+        else
+            case "$QEMU_SERIAL" in
+                none)
+                    run_qemu "$QEMU_BIN" \
+                        $KVM_ARGS \
+                        -machine q35 \
+                        -m "$QEMU_MEM" \
+                        -vga virtio \
+                        -drive "if=none,id=stick,format=raw,file=$IMG" \
+                        -device virtio-blk-pci,drive=stick,bootindex=1 \
+                        -netdev user,id=net0 \
+                        -device e1000,netdev=net0
+                    ;;
+                stdio)
+                    run_qemu "$QEMU_BIN" \
+                        $KVM_ARGS \
+                        -machine q35 \
+                        -m "$QEMU_MEM" \
+                        -vga virtio \
+                        -drive "if=none,id=stick,format=raw,file=$IMG" \
+                        -device virtio-blk-pci,drive=stick,bootindex=1 \
+                        -netdev user,id=net0 \
+                        -device e1000,netdev=net0 \
+                        -serial stdio
+                    ;;
+                log)
+                    run_qemu "$QEMU_BIN" \
+                        $KVM_ARGS \
+                        -machine q35 \
+                        -m "$QEMU_MEM" \
+                        -vga virtio \
+                        -drive "if=none,id=stick,format=raw,file=$IMG" \
+                        -device virtio-blk-pci,drive=stick,bootindex=1 \
+                        -netdev user,id=net0 \
+                        -device e1000,netdev=net0 \
+                        -serial "file:$QEMU_SERIAL_LOG"
+                    ;;
+            esac
+        fi
         ;;
     usb)
         case "$QEMU_SERIAL" in

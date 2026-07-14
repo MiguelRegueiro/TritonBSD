@@ -52,6 +52,12 @@ if [ -x /home/triton/.start-hyprland ]; then
     echo "Triton desktop exited with status $status."
     echo "Last log lines:"
     tail -40 "$LOG"
+    echo
+    echo "Hyprland cache logs:"
+    find /home/triton/.cache/hyprland -type f 2>/dev/null | sort | tail -5 | while read -r file; do
+        echo "---- $file ----"
+        tail -40 "$file"
+    done
 else
     echo "Missing /home/triton/.start-hyprland"
     echo "Missing /home/triton/.start-hyprland" >> "$LOG"

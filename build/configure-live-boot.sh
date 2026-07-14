@@ -140,6 +140,7 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=Hyprland
 export XDG_CURRENT_DESKTOP=Hyprland
+export XDG_SESSION_ID="${XDG_SESSION_ID:-triton-live}"
 export QT_QPA_PLATFORM=wayland
 export MOZ_ENABLE_WAYLAND=1
 export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-seatd}"
@@ -150,9 +151,29 @@ mkdir -p \
     "$XDG_CONFIG_HOME" \
     "$XDG_CACHE_HOME" \
     "$XDG_CACHE_HOME/hyprland" \
+    "$XDG_CACHE_HOME/hyprland/crashreports" \
     "$XDG_DATA_HOME" \
     "$XDG_STATE_HOME"
 chmod 700 "$XDG_RUNTIME_DIR"
+
+if ! ls /dev/dri/renderD* >/dev/null 2>&1; then
+    export LIBGL_ALWAYS_SOFTWARE="${LIBGL_ALWAYS_SOFTWARE:-1}"
+fi
+
+echo "==== Triton Hyprland launch environment ===="
+echo "user: $(id)"
+echo "tty: $(tty 2>/dev/null || true)"
+echo "HOME=$HOME"
+echo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+echo "XDG_CACHE_HOME=$XDG_CACHE_HOME"
+echo "LIBSEAT_BACKEND=$LIBSEAT_BACKEND"
+echo "WLR_RENDERER_ALLOW_SOFTWARE=$WLR_RENDERER_ALLOW_SOFTWARE"
+echo "LIBGL_ALWAYS_SOFTWARE=${LIBGL_ALWAYS_SOFTWARE:-}"
+ls -ld "$HOME" "$XDG_RUNTIME_DIR" "$XDG_CACHE_HOME" "$XDG_CACHE_HOME/hyprland" "$XDG_CACHE_HOME/hyprland/crashreports"
+ls -l /dev/dri 2>/dev/null || echo "No /dev/dri devices present"
+service seatd onestatus 2>/dev/null || true
+echo "Hyprland: $(command -v Hyprland 2>/dev/null || command -v hyprland 2>/dev/null || echo missing)"
+echo
 
 if command -v Hyprland >/dev/null 2>&1; then
     exec dbus-run-session Hyprland
@@ -170,6 +191,8 @@ chmod 755 "$TRITON_HOME/.start-hyprland"
 mkdir -p "$TRITON_HOME/.config/hypr"
 if [ ! -f "$TRITON_HOME/.config/hypr/hyprland.conf" ]; then
     cat > "$TRITON_HOME/.config/hypr/hyprland.conf" <<'EOF'
+debug:disable_logs = false
+
 monitor=,preferred,auto,1
 
 exec-once = sh -c "quickshell || kitty || xterm"
