@@ -13,8 +13,8 @@ usage() {
     cat <<'EOF'
 usage: download-live-artifact.sh [--boot] [--repo owner/name] [--artifact name] [--out dir] RUN_ID
 
-Downloads a GitHub Actions artifact with a real progress bar, extracts the
-.img.xz file, decompresses it with xz progress, and prints the image path.
+Downloads a GitHub Actions artifact, extracts the .img.xz file, decompresses it,
+and prints the image path.
 
 Examples:
   ./scripts/download-live-artifact.sh 29367425435
@@ -148,7 +148,7 @@ if [ -f "$ZIP_FILE" ]; then
     echo "Using existing artifact zip: $ZIP_FILE"
 else
     TOKEN=$(gh auth token)
-    echo "Downloading artifact zip with progress"
+    echo "Downloading artifact zip"
     curl --fail --location --progress-bar \
         -H "Authorization: Bearer $TOKEN" \
         -H "Accept: application/vnd.github+json" \
@@ -177,7 +177,7 @@ if [ -f "$IMG_FILE" ]; then
     echo "Using existing decompressed image: $IMG_FILE"
 else
     echo
-    echo "Decompressing image with progress"
+    echo "Decompressing image"
     xz -dkv "$XZ_FILE"
 fi
 
