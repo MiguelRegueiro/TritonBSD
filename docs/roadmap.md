@@ -20,28 +20,37 @@ It does not yet prove:
 - installer UI
 - post-install desktop setup
 
-## Next Milestone: Live Desktop Bootstrap
+A later live-image experiment proved that packages and a live user can be added
+to the remixed memstick, but it still booted into the stock installer. See
+`docs/live-media-research.md` for the source-study notes from GhostBSD and
+TrueOS.
 
-The next image should still be based on official FreeBSD media, but it should
-boot to a `triton` live user and start Hyprland.
+## Next Milestone: Real Live Desktop Media
+
+The next image should stop depending on the stock FreeBSD installer startup path.
+It should build a real live root, then boot to a `triton` live user and start
+Hyprland.
 
 Required pieces:
 
-1. Install or stage desktop packages into the live root.
-2. Create a `triton` live user in the image.
-3. Copy the desktop skeleton into `/home/triton`.
-4. Enable required services in the image.
-5. Configure the live boot path to start the Triton session instead of dropping
-   straight into the stock installer.
+1. Create an installed-style FreeBSD root filesystem tree.
+2. Install or stage desktop packages into that live root.
+3. Create a `triton` live user in the image.
+4. Copy the desktop skeleton into `/home/triton`.
+5. Enable required services in the image.
+6. Configure `/etc/rc`, `/etc/rc.local`, `gettytab`, and `ttys` so the live boot
+   path starts the Triton session instead of the stock installer.
+7. Keep `triton-install` as an application launched from inside the live
+   desktop.
 
 ## Risk
 
 The official memstick root filesystem is small. Installing Hyprland, QuickShell,
 Qt, fonts, GPU firmware, and portals may exceed the existing image size.
 
-If that happens, the next build step must grow the image and filesystem before
-installing packages, or switch from remixing the official memstick to building a
-larger release image with FreeBSD's release tooling.
+If that happens, the next build step must switch from remixing the official
+memstick to building a larger release image with FreeBSD's release tooling or a
+GhostBSD-style live root image.
 
 ## Workflow
 

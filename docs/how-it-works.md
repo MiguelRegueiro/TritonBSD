@@ -52,20 +52,20 @@ The intended pipeline is:
 ```text
 FreeBSD src branch
   -> release.sh
-  -> stock memstick/ISO output
-  -> mount image
-  -> copy build/overlay into image
+  -> create installed-style live root
   -> install Triton desktop packages/config into live root
-  -> produce TritonBSD image
+  -> add live boot glue and installer launcher
+  -> produce TritonBSD ISO/memstick image
 ```
 
 There are two possible implementation paths:
 
-1. Source-build path: build stock media from `releng/15.1` with `release.sh`,
-   then overlay Triton files. This is the clean, reproducible path.
+1. Source-build path: build the FreeBSD base from `releng/15.1`, then assemble a
+   Triton live root and boot image. This is the clean, reproducible path.
 2. Remix path: fetch the official FreeBSD memstick image, verify checksums,
    mount it, inject Triton files, and repack. This is faster for early testing,
-   but less clean than the source-build path.
+   but it still follows the stock installer boot path and is not enough for the
+   real live desktop.
 
 Start with the source-build path unless iteration speed becomes a blocker.
 
@@ -78,7 +78,10 @@ The Triton overlay contains things that must exist before install:
 /usr/local/share/triton/skel
 ```
 
-The live session should auto-login to a temporary `triton` user and start:
+The live session should not depend on `/root/.profile`. It should configure the
+boot path directly through `/etc/rc`, `/etc/rc.local`, `gettytab`, `ttys`, or a
+small purpose-built ramdisk. After boot it should auto-login to a temporary
+`triton` user and start:
 
 ```sh
 ck-launch-session dbus-run-session start-hyprland
