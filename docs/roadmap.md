@@ -53,7 +53,7 @@ It sets:
 ```text
 TRITON_WITH_LIVE_DESKTOP=1
 TRITON_IMAGE_FLAVOR=live
-TRITON_IMAGE_SIZE=8G
+TRITON_IMAGE_SIZE=12G
 ```
 
 Expected first artifact:

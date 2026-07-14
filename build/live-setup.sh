@@ -8,6 +8,7 @@ DOTFILES_REPO="${TRITON_DOTFILES_REPO:-https://github.com/MiguelRegueiro/regueir
 DOTFILES_BRANCH="${TRITON_DOTFILES_BRANCH:-freebsd}"
 WORK_DIR="${WORK_DIR:-$PROJECT_DIR/work/live-setup}"
 DOTFILES_DIR="$WORK_DIR/regueiro-hyprland"
+PKG_CACHE="$WORK_DIR/pkg-cache"
 STOW_PACKAGES="hypr quickshell fish starship fastfetch kitty gtk xresources fontconfig mimeapps user-dirs desktop-overrides runin elio"
 SPARSE_PACKAGES="$STOW_PACKAGES wallpapers fonts"
 
@@ -32,12 +33,14 @@ if [ ! -f "$PKGLIST" ]; then
 fi
 
 echo "Bootstrapping pkg inside live root"
-env ASSUME_ALWAYS_YES=yes pkg -r "$ROOT" bootstrap -y
-env ASSUME_ALWAYS_YES=yes pkg -r "$ROOT" update -f
+mkdir -p "$PKG_CACHE"
+env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" bootstrap -y
+env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" update -f
 
 echo "Installing Triton live packages"
-xargs env ASSUME_ALWAYS_YES=yes pkg -r "$ROOT" install -y < "$PKGLIST"
-env ASSUME_ALWAYS_YES=yes pkg -r "$ROOT" clean -ay
+xargs env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" install -y < "$PKGLIST"
+env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" clean -ay
+rm -rf "$PKG_CACHE"
 
 if ! command -v git >/dev/null 2>&1; then
     echo "Installing git on the builder for sparse dotfile checkout"
