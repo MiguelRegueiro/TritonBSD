@@ -4,20 +4,34 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 export PATH
 
 clear
+{
+    echo "==== Triton live startup $(date) ===="
+    uname -a
+    id triton || true
+    echo
+} >/tmp/triton-live.log 2>&1
+
 echo "Starting Triton live desktop..."
+echo "Log: /tmp/triton-live.log"
 echo
 
+service dbus onestart >>/tmp/triton-live.log 2>&1 || true
+service seatd onestart >>/tmp/triton-live.log 2>&1 || true
+
 if [ -x /home/triton/.start-hyprland ]; then
-    su -l triton -c /home/triton/.start-hyprland
+    su -l triton -c /home/triton/.start-hyprland >>/tmp/triton-live.log 2>&1
     status=$?
     echo
     echo "Triton desktop exited with status $status."
+    echo "Last log lines:"
+    tail -40 /tmp/triton-live.log
 else
     echo "Missing /home/triton/.start-hyprland"
+    echo "Missing /home/triton/.start-hyprland" >>/tmp/triton-live.log
 fi
 
 echo
 echo "Falling back to the FreeBSD installer."
-sleep 3
+echo "Open shell and inspect /tmp/triton-live.log if the desktop did not start."
+sleep 20
 exec bsdinstall
-

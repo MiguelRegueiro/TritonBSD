@@ -108,4 +108,18 @@ fi
 exec bsdinstall
 EOF
 
+if [ -f "$ROOT/root/.login" ] && [ ! -f "$ROOT/root/.login.freebsd-installer" ]; then
+    cp "$ROOT/root/.login" "$ROOT/root/.login.freebsd-installer"
+fi
+
+cat > "$ROOT/root/.login" <<'EOF'
+setenv PATH /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+if ( -x /usr/local/sbin/triton-live-start ) then
+    exec /usr/local/sbin/triton-live-start
+endif
+
+exec bsdinstall
+EOF
+
 echo "Triton live setup complete"
