@@ -2,7 +2,15 @@
 set -eu
 
 PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-IMG="${1:-$PROJECT_DIR/artifacts/TritonBSD-15.1-RELEASE-amd64-bootstrap-memstick.img}"
+LIVE_IMG="$PROJECT_DIR/artifacts/TritonBSD-15.1-RELEASE-amd64-live-memstick.img"
+BOOTSTRAP_IMG="$PROJECT_DIR/artifacts/TritonBSD-15.1-RELEASE-amd64-bootstrap-memstick.img"
+if [ "$#" -gt 0 ]; then
+    IMG="$1"
+elif [ -f "$LIVE_IMG" ]; then
+    IMG="$LIVE_IMG"
+else
+    IMG="$BOOTSTRAP_IMG"
+fi
 QEMU_BIN="${QEMU_BIN:-qemu-system-x86_64}"
 QEMU_MEM="${QEMU_MEM:-4096}"
 QEMU_BOOT_MODE="${QEMU_BOOT_MODE:-virtio}"
