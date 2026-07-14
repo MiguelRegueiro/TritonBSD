@@ -17,10 +17,6 @@ jobs:
 
       - name: Build TritonBSD live desktop memstick in FreeBSD VM
         uses: vmactions/freebsd-vm@v1
-        env:
-          TRITON_WITH_LIVE_DESKTOP: "1"
-          TRITON_IMAGE_FLAVOR: live
-          TRITON_IMAGE_SIZE: 6G
         with:
           release: "15.1"
           usesh: true
@@ -28,6 +24,9 @@ jobs:
           mem: 8192
           cpu: 4
           run: |
+            export TRITON_WITH_LIVE_DESKTOP=1
+            export TRITON_IMAGE_FLAVOR=live
+            export TRITON_IMAGE_SIZE=6G
             freebsd-version
             uname -a
             ./build/build-remix-image.sh
@@ -36,6 +35,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tritonbsd-live-memstick
-          path: artifacts/*.img.xz
+          path: artifacts/*-live-memstick.img.xz
           if-no-files-found: error
           retention-days: 7
