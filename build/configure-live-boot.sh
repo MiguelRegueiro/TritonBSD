@@ -188,13 +188,15 @@ if command -v triton-gpu-preflight >/dev/null 2>&1; then
     if ! triton-gpu-preflight --check; then
         echo
         echo "Triton desktop cannot start: no DRM/KMS GPU is available."
-        echo "QEMU: use Triton's QEMU helper or virtio graphics."
+        echo "QEMU: current FreeBSD drm-kmod packages do not expose virtio-gpu KMS here."
+        echo "QEMU: the helper can test boot and shell flow, but not Hyprland yet."
         echo "Hardware: the matching drm-kmod driver/firmware must load."
         echo
         exit 78
     fi
 elif ! ls /dev/dri/card* >/dev/null 2>&1; then
     echo "No /dev/dri/card* device present; Hyprland cannot start."
+    echo "QEMU: current FreeBSD drm-kmod packages do not expose virtio-gpu KMS here."
     exit 78
 fi
 

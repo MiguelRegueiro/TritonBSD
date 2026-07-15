@@ -105,8 +105,9 @@ if [ "$LOAD_MODULES" -eq 1 ]; then
     else
         service devd onestart >> "$LOG" 2>&1 || true
 
-        # QEMU/virtio first for the supported VM path, then common laptops/desktops.
-        for module in drm virtio_gpu i915kms amdgpu radeonkms vmwgfx; do
+        # FreeBSD's packaged drm-kmod currently covers native Intel/AMD/Radeon
+        # drivers here. It does not ship a QEMU virtio-gpu/vmwgfx DRM driver.
+        for module in drm i915kms amdgpu radeonkms; do
             load_module "$module" || true
             if has_drm_card; then
                 break
@@ -124,7 +125,8 @@ if wait_for_drm; then
 fi
 
 log "No DRM/KMS GPU is available, so Hyprland cannot start."
-log "QEMU: boot with virtio graphics, preferably scripts/run-bootstrap-qemu.sh."
+log "QEMU: FreeBSD drm-kmod currently does not provide virtio-gpu/vmwgfx KMS here."
+log "QEMU: the helper can test boot and shell flow, but not the Hyprland desktop."
 log "Hardware: the live image needs the matching drm-kmod driver/firmware for the GPU."
 show_diagnostics
 exit 78

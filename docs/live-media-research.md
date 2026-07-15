@@ -92,10 +92,17 @@ devices, including graphics devices. It also calls out `XDG_RUNTIME_DIR` as a
 runtime directory that must be writable and suitable for Wayland clients.
 
 The live image preflights DRM/KMS before launching Hyprland. During rc startup it
-tries the QEMU and common laptop/desktop kernel modules (`virtio_gpu`,
-`i915kms`, `amdgpu`, `radeonkms`) and waits briefly for `/dev/dri/card*`. If no
-DRM device appears, it leaves a clean diagnostic in `/tmp/triton-live.log` and
-drops to the live shell instead of showing Aquamarine backend noise.
+tries the packaged native laptop/desktop kernel modules (`i915kms`, `amdgpu`,
+`radeonkms`) and waits briefly for `/dev/dri/card*`. If no DRM device appears,
+it leaves a clean diagnostic in `/tmp/triton-live.log` and drops to the live
+shell instead of showing Aquamarine backend noise.
+
+The QEMU helper is currently useful for boot and shell-flow testing, not for a
+visible Hyprland desktop. FreeBSD's packaged `drm-kmod` set used here does not
+include a `virtio_gpu` or `vmwgfx` DRM/KMS driver, so QEMU `virtio-vga` and
+`virtio-vga-gl` do not produce `/dev/dri/card*` for Hyprland. Desktop validation
+needs physical hardware with a supported Intel/AMD/Radeon GPU, or a later VM path
+with a real supported DRM device.
 
 Hyprland's upstream documentation warns that VM usage needs a virtual GPU with
 DRM/KMS support. The QEMU helper now uses virtio graphics by default and also
@@ -105,6 +112,7 @@ supports:
 QEMU_GL=1 ./scripts/run-bootstrap-qemu.sh path/to/image.img
 ```
 
-That switches to `virtio-vga-gl` with `gtk,gl=on` for testing Hyprland in a VM.
+That switches to `virtio-vga-gl` with `gtk,gl=on`, but it is not sufficient for
+Hyprland on current FreeBSD packages because no guest DRM/KMS driver binds to it.
 In fish, export it first with `set -x QEMU_GL 1`, run the helper, then clear it
 with `set -e QEMU_GL`.
