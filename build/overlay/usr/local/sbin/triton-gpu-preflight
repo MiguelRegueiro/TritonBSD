@@ -1,0 +1,130 @@
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+export PATH
+
+LOG="${TRITON_LIVE_LOG:-/tmp/triton-live.log}"
+LOAD_MODULES=0
+WAIT_SECONDS="${TRITON_DRM_WAIT_SECONDS:-8}"
+
+case "${1:-}" in
+    --load)
+        LOAD_MODULES=1
+        ;;
+    --check|"")
+        ;;
+    *)
+        echo "usage: triton-gpu-preflight [--load|--check]" >&2
+        exit 64
+        ;;
+esac
+
+log() {
+    echo "$@"
+}
+
+has_drm_card() {
+    ls /dev/dri/card* >/dev/null 2>&1
+}
+
+show_diagnostics() {
+    log "Graphics diagnostics:"
+    if [ -d /dev/dri ]; then
+        ls -l /dev/dri 2>&1 | while IFS= read -r line; do log "  $line"; done
+    else
+        log "  /dev/dri is missing"
+    fi
+
+    if command -v pciconf >/dev/null 2>&1; then
+        log "PCI display devices:"
+        pciconf -lv 2>/dev/null | awk '
+            BEGIN { keep = 0; block = "" }
+            /^[^[:space:]]/ {
+                if (keep) print block
+                keep = 0
+                block = $0 "\n"
+                next
+            }
+            {
+                block = block $0 "\n"
+                low = tolower($0)
+                if (low ~ /class[[:space:]]*=.*(display|vga|3d)/ || low ~ /(vga|display|3d)/) keep = 1
+            }
+            END { if (keep) print block }
+        ' | sed 's/^/  /' | while IFS= read -r line; do log "$line"; done
+    fi
+
+    if command -v kldstat >/dev/null 2>&1; then
+        log "Loaded graphics modules:"
+        kldstat 2>/dev/null | grep -Ei 'drm|kms|i915|amdgpu|radeon|virtio|vmwgfx|nvidia' | sed 's/^/  /' |
+            while IFS= read -r line; do log "$line"; done
+    fi
+}
+
+load_module() {
+    module="$1"
+
+    if kldstat -n "$module.ko" >/dev/null 2>&1 || kldstat -m "$module" >/dev/null 2>&1; then
+        log "GPU module already loaded: $module"
+        return 0
+    fi
+
+    log "Trying GPU module: $module"
+    if kldload "$module" >> "$LOG" 2>&1; then
+        log "Loaded GPU module: $module"
+        return 0
+    fi
+
+    log "GPU module not usable here: $module"
+    return 1
+}
+
+wait_for_drm() {
+    remaining="$WAIT_SECONDS"
+    while [ "$remaining" -gt 0 ]; do
+        if has_drm_card; then
+            return 0
+        fi
+        sleep 1
+        remaining=$((remaining - 1))
+    done
+    has_drm_card
+}
+
+log "==== Triton GPU preflight $(date) ===="
+
+if has_drm_card; then
+    log "DRM/KMS device found before module probing."
+    show_diagnostics
+    exit 0
+fi
+
+if [ "$LOAD_MODULES" -eq 1 ]; then
+    if [ "$(id -u)" -ne 0 ]; then
+        log "Cannot load GPU modules as non-root."
+    else
+        service devd onestart >> "$LOG" 2>&1 || true
+
+        # QEMU/virtio first for the supported VM path, then common laptops/desktops.
+        for module in drm virtio_gpu i915kms amdgpu radeonkms vmwgfx; do
+            load_module "$module" || true
+            if has_drm_card; then
+                break
+            fi
+        done
+
+        devfs rule -s 4 applyset >> "$LOG" 2>&1 || true
+    fi
+fi
+
+if wait_for_drm; then
+    log "DRM/KMS device ready."
+    show_diagnostics
+    exit 0
+fi
+
+log "No DRM/KMS GPU is available, so Hyprland cannot start."
+log "QEMU: boot with virtio graphics, preferably scripts/run-bootstrap-qemu.sh."
+log "Hardware: the live image needs the matching drm-kmod driver/firmware for the GPU."
+show_diagnostics
+exit 78

@@ -34,3 +34,4 @@ jobs:
             sh -n build/overlay/usr/local/bin/triton-install
             sh -n build/overlay/usr/local/libexec/triton/triton-install
             sh -n build/overlay/usr/local/sbin/triton-live-start
+            sh -n build/overlay/usr/local/sbin/triton-gpu-preflight

@@ -37,6 +37,10 @@ if [ "$(id -u)" -eq 0 ]; then
     service dbus onestart >> "$LOG" 2>&1 || true
     service seatd onestart >> "$LOG" 2>&1 || true
 
+    if [ -x /usr/local/sbin/triton-gpu-preflight ]; then
+        /usr/local/sbin/triton-gpu-preflight --load >> "$LOG" 2>&1 || true
+    fi
+
     exec su -l triton -c /usr/local/sbin/triton-live-start
 fi
 

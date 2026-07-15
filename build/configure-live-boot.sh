@@ -67,6 +67,10 @@ chmod 700 \
 service dbus onestart >> "$LOG" 2>&1 || true
 service seatd onestart >> "$LOG" 2>&1 || true
 
+if [ -x /usr/local/sbin/triton-gpu-preflight ]; then
+    /usr/local/sbin/triton-gpu-preflight --load >> "$LOG" 2>&1 || true
+fi
+
 clear
 echo "TritonBSD live environment"
 echo
@@ -169,6 +173,20 @@ mkdir -p \
     "$XDG_DATA_HOME" \
     "$XDG_STATE_HOME"
 chmod 700 "$XDG_RUNTIME_DIR"
+
+if command -v triton-gpu-preflight >/dev/null 2>&1; then
+    if ! triton-gpu-preflight --check; then
+        echo
+        echo "Triton desktop cannot start: no DRM/KMS GPU is available."
+        echo "QEMU: use Triton's QEMU helper or virtio graphics."
+        echo "Hardware: the matching drm-kmod driver/firmware must load."
+        echo
+        exit 78
+    fi
+elif ! ls /dev/dri/card* >/dev/null 2>&1; then
+    echo "No /dev/dri/card* device present; Hyprland cannot start."
+    exit 78
+fi
 
 if ! ls /dev/dri/renderD* >/dev/null 2>&1; then
     export LIBGL_ALWAYS_SOFTWARE="${LIBGL_ALWAYS_SOFTWARE:-1}"

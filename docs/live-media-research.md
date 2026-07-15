@@ -91,9 +91,15 @@ before starting the compositor because it brokers non-root access to shared
 devices, including graphics devices. It also calls out `XDG_RUNTIME_DIR` as a
 runtime directory that must be writable and suitable for Wayland clients.
 
-Hyprland's upstream documentation warns that VM usage needs 3D acceleration in
-the virtual GPU configuration. The QEMU helper therefore keeps the stable
-default display path, but also supports:
+The live image preflights DRM/KMS before launching Hyprland. During rc startup it
+tries the QEMU and common laptop/desktop kernel modules (`virtio_gpu`,
+`i915kms`, `amdgpu`, `radeonkms`) and waits briefly for `/dev/dri/card*`. If no
+DRM device appears, it leaves a clean diagnostic in `/tmp/triton-live.log` and
+drops to the live shell instead of showing Aquamarine backend noise.
+
+Hyprland's upstream documentation warns that VM usage needs a virtual GPU with
+DRM/KMS support. The QEMU helper now uses virtio graphics by default and also
+supports:
 
 ```sh
 QEMU_GL=1 ./scripts/run-bootstrap-qemu.sh path/to/image.img

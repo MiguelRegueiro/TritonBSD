@@ -3,6 +3,7 @@ seatd
 consolekit2
 polkit
 drm-61-kmod
+gpu-firmware-kmod
 libglvnd
 mesa-dri
 mesa-libs
