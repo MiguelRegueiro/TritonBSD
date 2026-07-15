@@ -46,9 +46,23 @@ chmod 664 "$LOG" 2>/dev/null || true
     echo "Preparing writable runtime paths"
 } >> "$LOG" 2>&1
 
-mkdir -p /tmp/install_etc /tmp/triton-runtime
-chown triton:triton /tmp/triton-runtime 2>/dev/null || true
-chmod 700 /tmp/triton-runtime 2>/dev/null || true
+mkdir -p \
+    /tmp/install_etc \
+    /tmp/triton-runtime \
+    /tmp/triton-cache/hyprland \
+    /tmp/triton-state \
+    /tmp/triton-data
+chown -R triton:triton \
+    /tmp/triton-runtime \
+    /tmp/triton-cache \
+    /tmp/triton-state \
+    /tmp/triton-data 2>/dev/null || true
+chmod 700 \
+    /tmp/triton-runtime \
+    /tmp/triton-cache \
+    /tmp/triton-cache/hyprland \
+    /tmp/triton-state \
+    /tmp/triton-data 2>/dev/null || true
 
 service dbus onestart >> "$LOG" 2>&1 || true
 service seatd onestart >> "$LOG" 2>&1 || true
@@ -134,9 +148,9 @@ export USER="${USER:-triton}"
 export LOGNAME="${LOGNAME:-triton}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/triton-runtime}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/triton-cache}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-/tmp/triton-data}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-/tmp/triton-state}"
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=Hyprland
 export XDG_CURRENT_DESKTOP=Hyprland

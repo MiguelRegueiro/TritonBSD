@@ -17,9 +17,22 @@ if [ "$(id -u)" -eq 0 ]; then
         echo "Starting required services"
     } >> "$LOG" 2>&1
 
-    mkdir -p /tmp/triton-runtime
-    chown triton:triton /tmp/triton-runtime 2>/dev/null || true
-    chmod 700 /tmp/triton-runtime 2>/dev/null || true
+    mkdir -p \
+        /tmp/triton-runtime \
+        /tmp/triton-cache/hyprland \
+        /tmp/triton-state \
+        /tmp/triton-data
+    chown -R triton:triton \
+        /tmp/triton-runtime \
+        /tmp/triton-cache \
+        /tmp/triton-state \
+        /tmp/triton-data 2>/dev/null || true
+    chmod 700 \
+        /tmp/triton-runtime \
+        /tmp/triton-cache \
+        /tmp/triton-cache/hyprland \
+        /tmp/triton-state \
+        /tmp/triton-data 2>/dev/null || true
 
     service dbus onestart >> "$LOG" 2>&1 || true
     service seatd onestart >> "$LOG" 2>&1 || true
@@ -54,7 +67,7 @@ if [ -x /home/triton/.start-hyprland ]; then
     tail -40 "$LOG"
     echo
     echo "Hyprland cache logs:"
-    find /home/triton/.cache/hyprland -type f 2>/dev/null | sort | tail -5 | while read -r file; do
+    find /tmp/triton-cache/hyprland /home/triton/.cache/hyprland -type f 2>/dev/null | sort | tail -5 | while read -r file; do
         echo "---- $file ----"
         tail -40 "$file"
     done
