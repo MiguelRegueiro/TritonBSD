@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.0
 
       - name: Build TritonBSD bootstrap memstick in FreeBSD VM
         uses: vmactions/freebsd-vm@v1
@@ -29,10 +29,9 @@ jobs:
             ./build/build-remix-image.sh
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: tritonbsd-bootstrap-memstick
           path: artifacts/*.img.xz
           if-no-files-found: error
           retention-days: 7
-
