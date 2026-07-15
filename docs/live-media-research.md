@@ -69,8 +69,8 @@ Recommended MVP:
 2. Use a TrueOS-style handoff for the next test image:
    - replace the stock installer `/etc/rc.local`
    - start live services there
-   - configure `gettytab` and `ttys` to autologin `triton` on `ttyv0`
-   - start Hyprland from the live user's profile
+   - start the Triton live desktop directly on `ttyv0`
+   - keep `gettytab` and `ttys` autologin as a fallback path
 3. Replace the live workflow internals with a new live image path:
    - create a FreeBSD root filesystem tree
    - install FreeBSD base plus packages into that root

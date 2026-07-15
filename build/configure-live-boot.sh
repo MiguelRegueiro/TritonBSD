@@ -74,11 +74,11 @@ fi
 clear
 echo "TritonBSD live environment"
 echo
-echo "Autologin on ttyv0 will start the Triton desktop."
+echo "Starting the Triton desktop on ttyv0."
 echo "Log: $LOG"
 echo
 
-exit 0
+exec /usr/local/sbin/triton-live-start
 EOF
 chmod 555 "$ROOT/etc/rc.local"
 
@@ -88,6 +88,16 @@ if [ -f "$ROOT/etc/gettytab" ] && ! grep -q '^triton-live|' "$ROOT/etc/gettytab"
 # TritonBSD live user autologin
 triton-live|TritonBSD live autologin:\
 	:al=triton:ht:np:sp#115200:
+EOF
+fi
+
+if [ -f "$ROOT/etc/devfs.rules" ] && ! grep -q '^\[triton_live=' "$ROOT/etc/devfs.rules"; then
+    cat >> "$ROOT/etc/devfs.rules" <<'EOF'
+
+[triton_live=10]
+add path 'dri/*' mode 0660 group video
+add path 'drm/*' mode 0660 group video
+add path 'input/*' mode 0660 group video
 EOF
 fi
 

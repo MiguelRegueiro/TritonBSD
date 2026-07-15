@@ -91,12 +91,11 @@ fi
 chroot "$ROOT" /usr/sbin/chown -R triton:triton /home/triton
 
 echo "Enabling live desktop services"
-sysrc -f "$ROOT/etc/rc.conf" dbus_enable=YES
-sysrc -f "$ROOT/etc/rc.conf" seatd_enable=YES
+sysrc -f "$ROOT/etc/rc.conf" dbus_enable=NO
+sysrc -f "$ROOT/etc/rc.conf" seatd_enable=NO
 sysrc -f "$ROOT/etc/rc.conf" devfs_enable=YES
-sysrc -f "$ROOT/etc/rc.conf" devfs_system_ruleset=devfsrules_common
-sysrc -f "$ROOT/etc/rc.conf" powerd_enable=YES
-sysrc -f "$ROOT/etc/rc.conf" powerd_flags="-a hiadaptive -b adaptive -n adaptive"
+sysrc -f "$ROOT/etc/rc.conf" devfs_system_ruleset=triton_live
+sysrc -f "$ROOT/etc/rc.conf" powerd_enable=NO
 
 "$PROJECT_DIR/build/configure-live-boot.sh" "$ROOT"
 

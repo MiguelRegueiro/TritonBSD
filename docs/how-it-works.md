@@ -84,11 +84,11 @@ uses the simpler TrueOS/GhostBSD-style handoff:
 ```text
 /etc/rc.local
   -> starts required live services
-  -> exits without launching bsdinstall
+  -> starts /usr/local/sbin/triton-live-start on ttyv0
 /etc/gettytab + /etc/ttys
-  -> autologin triton on ttyv0
+  -> fallback autologin triton on ttyv0
 /home/triton/.profile
-  -> exec /usr/local/sbin/triton-live-start
+  -> fallback exec /usr/local/sbin/triton-live-start
 /usr/local/sbin/triton-live-start
   -> run /home/triton/.start-hyprland
 ```
