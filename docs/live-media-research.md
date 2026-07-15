@@ -100,9 +100,10 @@ shell instead of showing Aquamarine backend noise.
 The QEMU helper is currently useful for boot and shell-flow testing, not for a
 visible Hyprland desktop. FreeBSD's packaged `drm-kmod` set used here does not
 include a `virtio_gpu` or `vmwgfx` DRM/KMS driver, so QEMU `virtio-vga` and
-`virtio-vga-gl` do not produce `/dev/dri/card*` for Hyprland. Desktop validation
-needs physical hardware with a supported Intel/AMD/Radeon GPU, or a later VM path
-with a real supported DRM device.
+`virtio-vga-gl` do not produce `/dev/dri/card*` for Hyprland. Triton uses the
+newest packaged DRM branch available to widen real hardware coverage, but desktop
+validation still needs physical hardware with a supported Intel/AMD/Radeon GPU,
+or a later VM path with a real supported DRM device.
 
 Hyprland's upstream documentation warns that VM usage needs a virtual GPU with
 DRM/KMS support. The QEMU helper now uses virtio graphics by default and also

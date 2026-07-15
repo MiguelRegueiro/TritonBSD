@@ -2,7 +2,7 @@ dbus
 seatd
 consolekit2
 polkit
-drm-61-kmod
+drm-latest-kmod
 gpu-firmware-kmod
 libglvnd
 mesa-dri

@@ -25,7 +25,7 @@ polkit
 xdg-desktop-portal
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
-drm-61-kmod
+drm-latest-kmod
 gpu-firmware-intel-kmod-kabylake
 libva
 libva-intel-media-driver
