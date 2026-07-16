@@ -10,7 +10,7 @@ WORK_DIR="${WORK_DIR:-$PROJECT_DIR/work/live-setup}"
 DOTFILES_DIR="$WORK_DIR/regueiro-hyprland"
 PKG_CACHE="$WORK_DIR/pkg-cache"
 STOW_PACKAGES="hypr quickshell fish starship fastfetch kitty gtk xresources fontconfig mimeapps user-dirs desktop-overrides runin elio"
-SPARSE_PACKAGES="$STOW_PACKAGES wallpapers fonts icons"
+SPARSE_PACKAGES="$STOW_PACKAGES wallpapers fonts icons/Bibata-Modern-Classic"
 
 if [ -z "$ROOT" ] || [ ! -d "$ROOT" ]; then
     echo "usage: $0 /mounted/freebsd/root" >&2
@@ -112,6 +112,16 @@ if [ -f "$TRITON_HOME/.config/hypr/conf/autostart.conf" ]; then
     sed -i '' 's/^exec-once = hypridle -q/# live: disabled hypridle auto-lock; no password-backed unlock in live media/' \
         "$TRITON_HOME/.config/hypr/conf/autostart.conf"
 fi
+
+for settings in \
+    "$TRITON_HOME/.config/gtk-3.0/settings.ini" \
+    "$TRITON_HOME/.config/gtk-4.0/settings.ini" \
+    "$TRITON_HOME/.gtkrc-2.0" \
+    "$TRITON_HOME/.config/hypr/scripts/apply-appearance.sh"; do
+    if [ -f "$settings" ]; then
+        sed -i '' 's/MacTahoe-dark/Adwaita/g' "$settings"
+    fi
+done
 
 chroot "$ROOT" /usr/sbin/chown -R triton:triton /home/triton
 
