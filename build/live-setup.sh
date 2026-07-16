@@ -159,4 +159,12 @@ sysrc -f "$ROOT/etc/rc.conf" powerd_enable=NO
 
 "$PROJECT_DIR/build/configure-live-boot.sh" "$ROOT"
 
+TEMPLATE="$ROOT/usr/local/share/triton/live-home-template"
+rm -rf "$TEMPLATE"
+mkdir -p "$(dirname "$TEMPLATE")"
+mv "$TRITON_HOME" "$TEMPLATE"
+mkdir -p "$TRITON_HOME"
+chroot "$ROOT" /usr/sbin/chown -R triton:triton /usr/local/share/triton/live-home-template /home/triton
+chroot "$ROOT" /bin/chmod 755 /home/triton
+
 echo "Triton live setup complete"
