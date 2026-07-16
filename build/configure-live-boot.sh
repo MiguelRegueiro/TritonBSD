@@ -91,13 +91,17 @@ triton-live|TritonBSD live autologin:\
 EOF
 fi
 
-if [ -f "$ROOT/etc/devfs.rules" ] && ! grep -q '^\[triton_live=' "$ROOT/etc/devfs.rules"; then
+touch "$ROOT/etc/devfs.rules"
+if ! grep -q '^\[triton_live=' "$ROOT/etc/devfs.rules"; then
     cat >> "$ROOT/etc/devfs.rules" <<'EOF'
 
 [triton_live=10]
-add path 'dri/*' mode 0660 group video
-add path 'drm/*' mode 0660 group video
-add path 'input/*' mode 0660 group video
+add path 'dri' unhide mode 0755
+add path 'dri/*' unhide mode 0660 group video
+add path 'drm' unhide mode 0755
+add path 'drm/*' unhide mode 0660 group video
+add path 'input' unhide mode 0755
+add path 'input/*' unhide mode 0660 group video
 EOF
 fi
 

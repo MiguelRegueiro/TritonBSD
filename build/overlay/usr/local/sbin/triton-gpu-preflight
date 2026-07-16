@@ -5,7 +5,7 @@ export PATH
 
 LOG="${TRITON_LIVE_LOG:-/tmp/triton-live.log}"
 LOAD_MODULES=0
-WAIT_SECONDS="${TRITON_DRM_WAIT_SECONDS:-8}"
+WAIT_SECONDS="${TRITON_DRM_WAIT_SECONDS:-30}"
 
 case "${1:-}" in
     --load)
@@ -25,6 +25,12 @@ log() {
 
 has_drm_card() {
     ls /dev/dri/card* >/dev/null 2>&1
+}
+
+apply_devfs_rules() {
+    if command -v devfs >/dev/null 2>&1; then
+        devfs rule -s 10 applyset >> "$LOG" 2>&1 || true
+    fi
 }
 
 show_diagnostics() {
@@ -48,7 +54,9 @@ show_diagnostics() {
             {
                 block = block $0 "\n"
                 low = tolower($0)
-                if (low ~ /class[[:space:]]*=.*(display|vga|3d)/ || low ~ /(vga|display|3d)/) keep = 1
+                if (low ~ /class[[:space:]]*=[[:space:]]*0x03/ ||
+                    low ~ /class[[:space:]]*=.*(display|vga|3d)/ ||
+                    low ~ /(vga|display|3d|intel.*graphics|nvidia|geforce|radeon)/) keep = 1
             }
             END { if (keep) print block }
         ' | sed 's/^/  /' | while IFS= read -r line; do log "$line"; done
@@ -57,6 +65,12 @@ show_diagnostics() {
     if command -v kldstat >/dev/null 2>&1; then
         log "Loaded graphics modules:"
         kldstat 2>/dev/null | grep -Ei 'drm|kms|i915|amdgpu|radeon|virtio|vmwgfx|nvidia' | sed 's/^/  /' |
+            while IFS= read -r line; do log "$line"; done
+    fi
+
+    if command -v dmesg >/dev/null 2>&1; then
+        log "Recent graphics kernel messages:"
+        dmesg 2>/dev/null | grep -Ei 'drm|kms|i915|amdgpu|radeon|nvidia|gpu|firmware|failed|error' | tail -n 80 | sed 's/^/  /' |
             while IFS= read -r line; do log "$line"; done
     fi
 }
@@ -82,12 +96,14 @@ load_module() {
 wait_for_drm() {
     remaining="$WAIT_SECONDS"
     while [ "$remaining" -gt 0 ]; do
+        apply_devfs_rules
         if has_drm_card; then
             return 0
         fi
         sleep 1
         remaining=$((remaining - 1))
     done
+    apply_devfs_rules
     has_drm_card
 }
 
@@ -114,7 +130,7 @@ if [ "$LOAD_MODULES" -eq 1 ]; then
             fi
         done
 
-        devfs rule -s 4 applyset >> "$LOG" 2>&1 || true
+        apply_devfs_rules
     fi
 fi
 
