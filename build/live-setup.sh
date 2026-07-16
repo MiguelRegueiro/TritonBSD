@@ -56,10 +56,18 @@ git clone --depth 1 --filter=blob:none --sparse --branch "$DOTFILES_BRANCH" \
 
 git -C "$DOTFILES_DIR" sparse-checkout set $SPARSE_PACKAGES
 
-if ! chroot "$ROOT" /usr/sbin/pw usershow triton >/dev/null 2>&1; then
-    chroot "$ROOT" /usr/sbin/pw useradd triton -u 1000 -d /home/triton -m -s /usr/local/bin/fish
+if [ -x "$ROOT/usr/local/bin/fish" ]; then
+    touch "$ROOT/etc/shells"
+    grep -qxF /usr/local/bin/fish "$ROOT/etc/shells" || echo /usr/local/bin/fish >> "$ROOT/etc/shells"
+    TRITON_SHELL=/usr/local/bin/fish
 else
-    chroot "$ROOT" /usr/sbin/pw usermod triton -s /usr/local/bin/fish
+    TRITON_SHELL=/bin/sh
+fi
+
+if ! chroot "$ROOT" /usr/sbin/pw usershow triton >/dev/null 2>&1; then
+    chroot "$ROOT" /usr/sbin/pw useradd triton -u 1000 -d /home/triton -m -s "$TRITON_SHELL"
+else
+    chroot "$ROOT" /usr/sbin/pw usermod triton -s "$TRITON_SHELL"
 fi
 
 for group in wheel operator video seatd realtime; do
@@ -102,7 +110,24 @@ if [ -d "$DOTFILES_DIR/icons" ]; then
     fi
 fi
 
-if chroot "$ROOT" /usr/local/bin/fc-cache -f /home/triton/.local/share/fonts >/dev/null 2>&1; then
+mkdir -p "$TRITON_HOME/.config/fontconfig/conf.d"
+cat > "$TRITON_HOME/.config/fontconfig/conf.d/99-triton-nerd-symbols.conf" <<'EOF'
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <alias>
+    <family>Symbols Nerd Font Mono</family>
+    <prefer>
+      <family>Symbols Nerd Font Mono</family>
+      <family>Symbols Nerd Font</family>
+      <family>JetBrainsMono Nerd Font</family>
+      <family>Hack Nerd Font</family>
+    </prefer>
+  </alias>
+</fontconfig>
+EOF
+
+if chroot "$ROOT" /usr/local/bin/fc-cache -f /usr/local/share/fonts /home/triton/.local/share/fonts >/dev/null 2>&1; then
     echo "Refreshed live user font cache"
 else
     echo "Warning: failed to refresh live user font cache" >&2
