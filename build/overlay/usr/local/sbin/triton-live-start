@@ -53,7 +53,15 @@ if [ "$(id -u)" -eq 0 ]; then
         /usr/local/sbin/triton-gpu-preflight --load >> "$LOG" 2>&1 || true
     fi
 
-    exec su -l triton -c /usr/local/sbin/triton-live-start
+    export HOME=/home/triton
+    export USER=triton
+    export LOGNAME=triton
+    export XDG_RUNTIME_DIR=/tmp/triton-runtime
+    export XDG_CONFIG_HOME=/home/triton/.config
+    export XDG_CACHE_HOME=/tmp/triton-cache
+    export XDG_DATA_HOME=/tmp/triton-data
+    export XDG_STATE_HOME=/tmp/triton-state
+    exec su -m triton -c /usr/local/sbin/triton-live-start
 fi
 
 LIVE_USER="$(id -un 2>/dev/null || echo triton)"

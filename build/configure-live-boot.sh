@@ -167,6 +167,23 @@ if [ "$(tty 2>/dev/null || true)" = "/dev/ttyv0" ] &&
 fi
 EOF
 
+cat > "$TRITON_HOME/.config/fish/conf.d/triton-live-start.fish" <<'EOF'
+if test (tty 2>/dev/null) = /dev/ttyv0
+    and test -x /usr/local/sbin/triton-live-start
+    and not test -f /tmp/.triton-live-started
+    set -gx HOME /home/triton
+    set -gx USER triton
+    set -gx LOGNAME triton
+    set -gx XDG_CONFIG_HOME /home/triton/.config
+    set -gx XDG_CACHE_HOME /tmp/triton-cache
+    set -gx XDG_DATA_HOME /tmp/triton-data
+    set -gx XDG_STATE_HOME /tmp/triton-state
+    mkdir -p $XDG_CONFIG_HOME $XDG_CACHE_HOME $XDG_DATA_HOME $XDG_STATE_HOME 2>/dev/null
+    touch /tmp/.triton-live-started
+    exec /usr/local/sbin/triton-live-start
+end
+EOF
+
 cat > "$TRITON_HOME/.start-hyprland" <<'EOF'
 #!/bin/sh
 
