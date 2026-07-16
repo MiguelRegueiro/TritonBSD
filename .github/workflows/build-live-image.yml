@@ -26,7 +26,7 @@ jobs:
           run: |
             export TRITON_WITH_LIVE_DESKTOP=1
             export TRITON_IMAGE_FLAVOR=live
-            export TRITON_IMAGE_SIZE=12G
+            export TRITON_IMAGE_SIZE=16G
             freebsd-version
             uname -a
             ./build/build-remix-image.sh
