@@ -56,6 +56,29 @@ if [ "$(id -u)" -eq 0 ]; then
     exec su -l triton -c /usr/local/sbin/triton-live-start
 fi
 
+LIVE_USER="$(id -un 2>/dev/null || echo triton)"
+LIVE_HOME="/home/$LIVE_USER"
+if [ "$LIVE_USER" = "triton" ]; then
+    LIVE_HOME=/home/triton
+fi
+
+export HOME="${HOME:-$LIVE_HOME}"
+case "$HOME" in
+    ""|/) export HOME="$LIVE_HOME" ;;
+esac
+export USER="${USER:-$LIVE_USER}"
+export LOGNAME="${LOGNAME:-$LIVE_USER}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/triton-cache}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-/tmp/triton-data}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-/tmp/triton-state}"
+
+mkdir -p \
+    "$XDG_CONFIG_HOME" \
+    "$XDG_CACHE_HOME" \
+    "$XDG_DATA_HOME" \
+    "$XDG_STATE_HOME" 2>/dev/null || true
+
 if [ ! -w "$LOG" ]; then
     LOG="/tmp/triton-live-$(id -un).log"
     touch "$LOG" 2>/dev/null || LOG="/dev/null"
@@ -96,6 +119,18 @@ echo
 echo "You are in the TritonBSD live shell."
 echo "Run triton-install to start the installer."
 if command -v fish >/dev/null 2>&1; then
+    export HOME=/home/triton
+    export USER=triton
+    export LOGNAME=triton
+    export XDG_CONFIG_HOME=/home/triton/.config
+    export XDG_CACHE_HOME=/tmp/triton-cache
+    export XDG_DATA_HOME=/tmp/triton-data
+    export XDG_STATE_HOME=/tmp/triton-state
+    mkdir -p \
+        "$XDG_CONFIG_HOME/fish" \
+        "$XDG_CACHE_HOME/fish" \
+        "$XDG_DATA_HOME/fish" \
+        "$XDG_STATE_HOME/fish" 2>/dev/null || true
     exec fish -l
 fi
 exec /bin/sh -i
