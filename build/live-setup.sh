@@ -10,7 +10,7 @@ WORK_DIR="${WORK_DIR:-$PROJECT_DIR/work/live-setup}"
 DOTFILES_DIR="$WORK_DIR/regueiro-hyprland"
 PKG_CACHE="$WORK_DIR/pkg-cache"
 STOW_PACKAGES="hypr quickshell fish starship fastfetch kitty gtk xresources fontconfig mimeapps user-dirs desktop-overrides runin elio"
-SPARSE_PACKAGES="$STOW_PACKAGES wallpapers fonts"
+SPARSE_PACKAGES="$STOW_PACKAGES wallpapers fonts icons"
 
 if [ -z "$ROOT" ] || [ ! -d "$ROOT" ]; then
     echo "usage: $0 /mounted/freebsd/root" >&2
@@ -57,7 +57,9 @@ git clone --depth 1 --filter=blob:none --sparse --branch "$DOTFILES_BRANCH" \
 git -C "$DOTFILES_DIR" sparse-checkout set $SPARSE_PACKAGES
 
 if ! chroot "$ROOT" /usr/sbin/pw usershow triton >/dev/null 2>&1; then
-    chroot "$ROOT" /usr/sbin/pw useradd triton -u 1000 -d /home/triton -m -s /bin/sh
+    chroot "$ROOT" /usr/sbin/pw useradd triton -u 1000 -d /home/triton -m -s /usr/local/bin/fish
+else
+    chroot "$ROOT" /usr/sbin/pw usermod triton -s /usr/local/bin/fish
 fi
 
 for group in wheel operator video seatd realtime; do
@@ -86,6 +88,29 @@ done
 mkdir -p "$TRITON_HOME/.local/share/fonts"
 if [ -d "$DOTFILES_DIR/fonts" ]; then
     tar -C "$DOTFILES_DIR/fonts" -cf - . | tar -C "$TRITON_HOME/.local/share/fonts" -xpf -
+fi
+
+mkdir -p "$TRITON_HOME/.local/share/icons"
+if [ -d "$DOTFILES_DIR/icons" ]; then
+    tar -C "$DOTFILES_DIR/icons" -cf - . | tar -C "$TRITON_HOME/.local/share/icons" -xpf -
+    mkdir -p "$TRITON_HOME/.icons"
+    if [ -d "$TRITON_HOME/.local/share/icons/MacTahoe-dark" ]; then
+        ln -sfn ../.local/share/icons/MacTahoe-dark "$TRITON_HOME/.icons/MacTahoe-dark"
+    fi
+    if [ -d "$TRITON_HOME/.local/share/icons/Bibata-Modern-Classic" ]; then
+        ln -sfn ../.local/share/icons/Bibata-Modern-Classic "$TRITON_HOME/.icons/Bibata-Modern-Classic"
+    fi
+fi
+
+if chroot "$ROOT" /usr/local/bin/fc-cache -f /home/triton/.local/share/fonts >/dev/null 2>&1; then
+    echo "Refreshed live user font cache"
+else
+    echo "Warning: failed to refresh live user font cache" >&2
+fi
+
+if [ -f "$TRITON_HOME/.config/hypr/conf/autostart.conf" ]; then
+    sed -i '' 's/^exec-once = hypridle -q/# live: disabled hypridle auto-lock; no password-backed unlock in live media/' \
+        "$TRITON_HOME/.config/hypr/conf/autostart.conf"
 fi
 
 chroot "$ROOT" /usr/sbin/chown -R triton:triton /home/triton

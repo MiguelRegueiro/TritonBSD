@@ -18,16 +18,28 @@ if [ "$(id -u)" -eq 0 ]; then
     } >> "$LOG" 2>&1
 
     mkdir -p \
+        /tmp/triton-home \
         /tmp/triton-runtime \
         /tmp/triton-cache/hyprland \
         /tmp/triton-state \
         /tmp/triton-data
+
+    if ! mount | grep -q ' on /home/triton '; then
+        echo "Preparing writable live home" >> "$LOG"
+        tar -C /home/triton -cf - . 2>> "$LOG" | tar -C /tmp/triton-home -xpf - 2>> "$LOG" || true
+        chown -R triton:triton /tmp/triton-home 2>/dev/null || true
+        mount_nullfs /tmp/triton-home /home/triton >> "$LOG" 2>&1 || \
+            echo "Warning: failed to mount writable /home/triton" >> "$LOG"
+    fi
+
     chown -R triton:triton \
+        /tmp/triton-home \
         /tmp/triton-runtime \
         /tmp/triton-cache \
         /tmp/triton-state \
         /tmp/triton-data 2>/dev/null || true
     chmod 700 \
+        /tmp/triton-home \
         /tmp/triton-runtime \
         /tmp/triton-cache \
         /tmp/triton-cache/hyprland \
@@ -83,4 +95,7 @@ fi
 echo
 echo "You are in the TritonBSD live shell."
 echo "Run triton-install to start the installer."
+if command -v fish >/dev/null 2>&1; then
+    exec fish -l
+fi
 exec /bin/sh -i

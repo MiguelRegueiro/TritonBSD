@@ -48,16 +48,28 @@ chmod 664 "$LOG" 2>/dev/null || true
 
 mkdir -p \
     /tmp/install_etc \
+    /tmp/triton-home \
     /tmp/triton-runtime \
     /tmp/triton-cache/hyprland \
     /tmp/triton-state \
     /tmp/triton-data
+
+if ! mount | grep -q ' on /home/triton '; then
+    echo "Preparing writable live home" >> "$LOG"
+    tar -C /home/triton -cf - . 2>> "$LOG" | tar -C /tmp/triton-home -xpf - 2>> "$LOG" || true
+    chown -R triton:triton /tmp/triton-home 2>/dev/null || true
+    mount_nullfs /tmp/triton-home /home/triton >> "$LOG" 2>&1 || \
+        echo "Warning: failed to mount writable /home/triton" >> "$LOG"
+fi
+
 chown -R triton:triton \
+    /tmp/triton-home \
     /tmp/triton-runtime \
     /tmp/triton-cache \
     /tmp/triton-state \
     /tmp/triton-data 2>/dev/null || true
 chmod 700 \
+    /tmp/triton-home \
     /tmp/triton-runtime \
     /tmp/triton-cache \
     /tmp/triton-cache/hyprland \
@@ -175,6 +187,10 @@ export XDG_CURRENT_DESKTOP=Hyprland
 export XDG_SESSION_ID="${XDG_SESSION_ID:-triton-live}"
 export QT_QPA_PLATFORM=wayland
 export MOZ_ENABLE_WAYLAND=1
+export XCURSOR_THEME="${XCURSOR_THEME:-Bibata-Modern-Classic}"
+export XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
+export HYPRCURSOR_THEME="${HYPRCURSOR_THEME:-Bibata-Modern-Classic}"
+export HYPRCURSOR_SIZE="${HYPRCURSOR_SIZE:-24}"
 export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-seatd}"
 export WLR_RENDERER_ALLOW_SOFTWARE="${WLR_RENDERER_ALLOW_SOFTWARE:-1}"
 
