@@ -5,7 +5,7 @@ consolekit2
 polkit
 wifi-firmware-rtw88-kmod
 wifi-firmware-iwlwifi-kmod
-drm-latest-kmod
+drm-61-kmod
 gpu-firmware-kmod
 libglvnd
 mesa-dri
