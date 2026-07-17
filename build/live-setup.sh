@@ -138,6 +138,16 @@ if [ -f "$TRITON_HOME/.config/hypr/conf/autostart.conf" ]; then
         "$TRITON_HOME/.config/hypr/conf/autostart.conf"
 fi
 
+STARSHIP_CONFIG="$TRITON_HOME/.config/starship.toml"
+if [ -f "$STARSHIP_CONFIG" ] && ! grep -q '^scan_timeout[[:space:]]*=' "$STARSHIP_CONFIG"; then
+    tmp_starship="${STARSHIP_CONFIG}.tmp"
+    {
+        echo 'scan_timeout = 200'
+        cat "$STARSHIP_CONFIG"
+    } > "$tmp_starship"
+    mv "$tmp_starship" "$STARSHIP_CONFIG"
+fi
+
 for settings in \
     "$TRITON_HOME/.config/gtk-3.0/settings.ini" \
     "$TRITON_HOME/.config/gtk-4.0/settings.ini" \

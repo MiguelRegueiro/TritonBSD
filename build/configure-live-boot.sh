@@ -249,6 +249,12 @@ service seatd onestatus 2>/dev/null || true
 echo "Hyprland: $(command -v Hyprland 2>/dev/null || command -v hyprland 2>/dev/null || echo missing)"
 echo
 
+cd "$HOME" 2>/dev/null || true
+
+if command -v start-hyprland >/dev/null 2>&1; then
+    exec dbus-run-session start-hyprland
+fi
+
 if command -v Hyprland >/dev/null 2>&1; then
     exec dbus-run-session Hyprland
 fi
