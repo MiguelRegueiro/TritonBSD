@@ -74,21 +74,34 @@ service seatd onestart >> "$LOG" 2>&1 || true
 service powerd onestart >> "$LOG" 2>&1 || true
 
 for module in \
+    fusefs \
     wlan wlan_ccmp wlan_tkip wlan_wep \
     if_rtw88 if_iwlwifi if_iwm if_iwx if_ath if_rtwn if_run if_rum if_uath \
     ng_ubt ng_hci ng_l2cap ng_btsocket; do
     kldload -n "$module" >> "$LOG" 2>&1 || true
 done
 
+wifi_parent=""
 if ! ifconfig wlan0 >/dev/null 2>&1; then
-    for parent in rtw880 rtw8800 iwlwifi0 iwm0 ath0 rtwn0 rum0 run0 uath0; do
-        if ifconfig "$parent" >/dev/null 2>&1; then
-            ifconfig wlan0 create wlandev "$parent" >> "$LOG" 2>&1 || true
-            break
-        fi
-    done
+    wifi_parent="$(sysctl -n net.wlan.devices 2>/dev/null | awk '{ print $1 }')"
+    if [ -z "$wifi_parent" ]; then
+        for parent in rtw880 rtw8800 iwlwifi0 iwm0 iwx0 ath0 rtwn0 rum0 run0 uath0; do
+            if ifconfig "$parent" >/dev/null 2>&1; then
+                wifi_parent="$parent"
+                break
+            fi
+        done
+    fi
+    if [ -n "$wifi_parent" ]; then
+        echo "Creating wlan0 from $wifi_parent" >> "$LOG"
+        ifconfig wlan0 create wlandev "$wifi_parent" >> "$LOG" 2>&1 || true
+    fi
 fi
 if ifconfig wlan0 >/dev/null 2>&1; then
+    if [ -n "${wifi_parent:-}" ]; then
+        sysrc "wlans_${wifi_parent}=wlan0" >> "$LOG" 2>&1 || true
+    fi
+    sysrc ifconfig_wlan0="WPA SYNCDHCP" >> "$LOG" 2>&1 || true
     ifconfig wlan0 country ES regdomain ETSI up >> "$LOG" 2>&1 || true
 fi
 
