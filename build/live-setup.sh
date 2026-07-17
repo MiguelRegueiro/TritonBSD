@@ -173,6 +173,10 @@ sysrc -f "$ROOT/etc/rc.conf" devfs_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" devfs_system_ruleset=10
 sysrc -f "$ROOT/etc/rc.conf" powerd_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" powerd_flags='-a hiadaptive -b adaptive -n adaptive'
+sysrc -f "$ROOT/etc/rc.conf" kld_list="i915kms acpi_video ng_ubt ng_hci ng_l2cap ng_btsocket fusefs"
+sysrc -f "$ROOT/etc/rc.conf" wlans_rtw880=wlan0
+sysrc -f "$ROOT/etc/rc.conf" create_args_wlan0="country ES regdomain ETSI"
+sysrc -f "$ROOT/etc/rc.conf" ifconfig_wlan0="WPA SYNCDHCP"
 sysrc -f "$ROOT/etc/rc.conf" hcsecd_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" bthidd_enable=YES
 

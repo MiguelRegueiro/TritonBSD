@@ -75,35 +75,18 @@ service powerd onestart >> "$LOG" 2>&1 || true
 
 for module in \
     fusefs \
-    wlan wlan_ccmp wlan_tkip wlan_wep \
-    if_rtw88 if_iwlwifi if_iwm if_iwx if_ath if_rtwn if_run if_rum if_uath \
     ng_ubt ng_hci ng_l2cap ng_btsocket; do
     kldload -n "$module" >> "$LOG" 2>&1 || true
 done
 
-wifi_parent=""
-if ! ifconfig wlan0 >/dev/null 2>&1; then
-    wifi_parent="$(sysctl -n net.wlan.devices 2>/dev/null | awk '{ print $1 }')"
-    if [ -z "$wifi_parent" ]; then
-        for parent in rtw880 rtw8800 iwlwifi0 iwm0 iwx0 ath0 rtwn0 rum0 run0 uath0; do
-            if ifconfig "$parent" >/dev/null 2>&1; then
-                wifi_parent="$parent"
-                break
-            fi
-        done
-    fi
-    if [ -n "$wifi_parent" ]; then
-        echo "Creating wlan0 from $wifi_parent" >> "$LOG"
-        ifconfig wlan0 create wlandev "$wifi_parent" >> "$LOG" 2>&1 || true
-    fi
-fi
-if ifconfig wlan0 >/dev/null 2>&1; then
-    if [ -n "${wifi_parent:-}" ]; then
-        sysrc "wlans_${wifi_parent}=wlan0" >> "$LOG" 2>&1 || true
-    fi
-    sysrc ifconfig_wlan0="WPA SYNCDHCP" >> "$LOG" 2>&1 || true
-    ifconfig wlan0 country ES regdomain ETSI up >> "$LOG" 2>&1 || true
-fi
+# Wi-Fi is configured in rc.conf to mirror the known-good installed FreeBSD
+# setup from regueiro-hyprland docs/freebsd-hardware-notes.md:
+#   wlans_rtw880=wlan0
+#   create_args_wlan0="country ES regdomain ETSI"
+#   ifconfig_wlan0="WPA SYNCDHCP"
+# Do not manually kldload/create/toggle the rtw88 wlan here; doing so hit a
+# LinuxKPI net80211 panic on the live image while the installed rc.conf path is
+# known to work on the same laptop.
 
 service hcsecd onestart >> "$LOG" 2>&1 || true
 service bthidd onestart >> "$LOG" 2>&1 || true
