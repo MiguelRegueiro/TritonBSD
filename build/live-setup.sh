@@ -180,6 +180,11 @@ sysrc -f "$ROOT/etc/rc.conf" ifconfig_wlan0="WPA SYNCDHCP"
 sysrc -f "$ROOT/etc/rc.conf" hcsecd_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" bthidd_enable=YES
 
+# The live root is read-only after boot, but dhclient needs to update DNS.
+# Keep resolver state in tmpfs so Wi-Fi DHCP can provide nameservers.
+rm -f "$ROOT/etc/resolv.conf"
+ln -s /tmp/resolv.conf "$ROOT/etc/resolv.conf"
+
 "$PROJECT_DIR/build/configure-live-boot.sh" "$ROOT"
 
 TEMPLATE="$ROOT/usr/local/share/triton/live-home-template"

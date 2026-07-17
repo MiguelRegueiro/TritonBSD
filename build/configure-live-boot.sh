@@ -67,6 +67,7 @@ prepare_live_home() {
 }
 
 mkdir -p /tmp/install_etc /tmp/triton-runtime 2>/dev/null || true
+[ -f /tmp/resolv.conf ] || printf 'nameserver 1.1.1.1\nnameserver 8.8.8.8\n' > /tmp/resolv.conf
 prepare_live_home
 
 service dbus onestart >> "$LOG" 2>&1 || true
