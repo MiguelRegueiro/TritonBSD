@@ -71,6 +71,29 @@ prepare_live_home
 
 service dbus onestart >> "$LOG" 2>&1 || true
 service seatd onestart >> "$LOG" 2>&1 || true
+service powerd onestart >> "$LOG" 2>&1 || true
+
+for module in \
+    wlan wlan_ccmp wlan_tkip wlan_wep \
+    if_rtw88 if_iwlwifi if_iwm if_iwx if_ath if_rtwn if_run if_rum if_uath \
+    ng_ubt ng_hci ng_l2cap ng_btsocket; do
+    kldload -n "$module" >> "$LOG" 2>&1 || true
+done
+
+if ! ifconfig wlan0 >/dev/null 2>&1; then
+    for parent in rtw880 rtw8800 iwlwifi0 iwm0 ath0 rtwn0 rum0 run0 uath0; do
+        if ifconfig "$parent" >/dev/null 2>&1; then
+            ifconfig wlan0 create wlandev "$parent" >> "$LOG" 2>&1 || true
+            break
+        fi
+    done
+fi
+if ifconfig wlan0 >/dev/null 2>&1; then
+    ifconfig wlan0 country ES regdomain ETSI up >> "$LOG" 2>&1 || true
+fi
+
+service hcsecd onestart >> "$LOG" 2>&1 || true
+service bthidd onestart >> "$LOG" 2>&1 || true
 
 if [ -x /usr/local/sbin/triton-gpu-preflight ]; then
     /usr/local/sbin/triton-gpu-preflight --load >> "$LOG" 2>&1 || true

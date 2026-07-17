@@ -76,6 +76,12 @@ for group in wheel operator video seatd realtime; do
     fi
 done
 
+mkdir -p "$ROOT/usr/local/etc"
+cat > "$ROOT/usr/local/etc/doas.conf" <<'EOF'
+permit nopass keepenv :wheel
+EOF
+chmod 0440 "$ROOT/usr/local/etc/doas.conf"
+
 TRITON_HOME="$ROOT/home/triton"
 mkdir -p "$TRITON_HOME"
 
@@ -165,7 +171,10 @@ sysrc -f "$ROOT/etc/rc.conf" dbus_enable=NO
 sysrc -f "$ROOT/etc/rc.conf" seatd_enable=NO
 sysrc -f "$ROOT/etc/rc.conf" devfs_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" devfs_system_ruleset=10
-sysrc -f "$ROOT/etc/rc.conf" powerd_enable=NO
+sysrc -f "$ROOT/etc/rc.conf" powerd_enable=YES
+sysrc -f "$ROOT/etc/rc.conf" powerd_flags='-a hiadaptive -b adaptive -n adaptive'
+sysrc -f "$ROOT/etc/rc.conf" hcsecd_enable=YES
+sysrc -f "$ROOT/etc/rc.conf" bthidd_enable=YES
 
 "$PROJECT_DIR/build/configure-live-boot.sh" "$ROOT"
 

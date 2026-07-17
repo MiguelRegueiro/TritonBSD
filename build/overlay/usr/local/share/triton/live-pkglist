@@ -1,7 +1,10 @@
 dbus
+doas
 seatd
 consolekit2
 polkit
+wifi-firmware-rtw88-kmod
+wifi-firmware-iwlwifi-kmod
 drm-latest-kmod
 gpu-firmware-kmod
 libglvnd
