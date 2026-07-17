@@ -1,0 +1,107 @@
+#!/bin/sh
+set -eu
+
+KEY_DIR=${TRITON_LIVE_SSH_KEY_DIR:-/tmp/triton-ssh}
+CONFIG=${TRITON_LIVE_SSHD_CONFIG:-$KEY_DIR/sshd_config}
+PIDFILE=${TRITON_LIVE_SSHD_PIDFILE:-/var/run/triton-live-sshd.pid}
+SSHD=${SSHD:-/usr/sbin/sshd}
+SSH_KEYGEN=${SSH_KEYGEN:-/usr/bin/ssh-keygen}
+
+need_root() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "triton-live-sshd must run as root. Use: doas triton-live-sshd ${1:-start}" >&2
+        exit 1
+    fi
+}
+
+make_keys() {
+    mkdir -p "$KEY_DIR"
+    chmod 700 "$KEY_DIR"
+
+    for alg in rsa ecdsa ed25519; do
+        key="$KEY_DIR/ssh_host_${alg}_key"
+        if [ ! -f "$key" ]; then
+            "$SSH_KEYGEN" -q -t "$alg" -f "$key" -N ""
+        fi
+    done
+
+    cat > "$CONFIG" <<EOF
+Port 22
+ListenAddress 0.0.0.0
+ListenAddress ::
+HostKey $KEY_DIR/ssh_host_rsa_key
+HostKey $KEY_DIR/ssh_host_ecdsa_key
+HostKey $KEY_DIR/ssh_host_ed25519_key
+PidFile $PIDFILE
+AuthorizedKeysFile .ssh/authorized_keys
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+PermitRootLogin no
+UsePAM yes
+X11Forwarding no
+AllowTcpForwarding yes
+Subsystem sftp /usr/libexec/sftp-server
+EOF
+    chmod 600 "$CONFIG"
+}
+
+is_running() {
+    [ -r "$PIDFILE" ] || return 1
+    pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+    [ -n "$pid" ] || return 1
+    kill -0 "$pid" 2>/dev/null
+}
+
+start_sshd() {
+    need_root start
+    if is_running; then
+        echo "triton live sshd already running"
+        return 0
+    fi
+
+    make_keys
+    "$SSHD" -f "$CONFIG" -t
+    "$SSHD" -f "$CONFIG"
+    echo "triton live sshd started"
+    echo "Set a live password first if needed: doas passwd triton"
+}
+
+stop_sshd() {
+    need_root stop
+    if ! is_running; then
+        echo "triton live sshd is not running"
+        return 0
+    fi
+    kill "$(cat "$PIDFILE")"
+    rm -f "$PIDFILE"
+    echo "triton live sshd stopped"
+}
+
+status_sshd() {
+    if is_running; then
+        echo "triton live sshd running pid $(cat "$PIDFILE")"
+    else
+        echo "triton live sshd not running"
+        return 1
+    fi
+}
+
+case "${1:-start}" in
+    start)
+        start_sshd
+        ;;
+    stop)
+        stop_sshd
+        ;;
+    restart)
+        stop_sshd || true
+        start_sshd
+        ;;
+    status)
+        status_sshd
+        ;;
+    *)
+        echo "usage: triton-live-sshd [start|stop|restart|status]" >&2
+        exit 64
+        ;;
+esac

@@ -37,6 +37,12 @@ xdg-desktop-portal-gtk
 gsettings-desktop-schemas
 at-spi2-core
 fusefs-libs3
+bsdisks
+fusefs-ext2
+e2fsprogs
+fusefs-exfat
+fusefs-ntfs
+exfat-utils
 wl-clipboard
 cliphist
 grim
