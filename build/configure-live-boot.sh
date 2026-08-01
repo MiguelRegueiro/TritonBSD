@@ -75,6 +75,7 @@ service seatd onestart >> "$LOG" 2>&1 || true
 service powerd onestart >> "$LOG" 2>&1 || true
 
 for module in \
+    ext2fs \
     fusefs \
     ng_ubt ng_hci ng_l2cap ng_btsocket; do
     kldload -n "$module" >> "$LOG" 2>&1 || true
