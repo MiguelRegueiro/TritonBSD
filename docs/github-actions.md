@@ -48,8 +48,10 @@ package installation into the live root and configure live-user startup.
 ## Download And Test An Artifact
 
 Use the helper script instead of downloading artifacts from the browser. It uses
-the GitHub API plus `curl --progress-bar`, then extracts and decompresses the
-image with verbose `xz` output.
+resumable parallel `aria2c` downloads when available, with a resumable `curl`
+fallback. It verifies the workflow result, artifact size, ZIP and XZ integrity,
+prints SHA-256 for both image forms, and decompresses the flashable `.img`. It
+never writes to a disk device.
 
 ```sh
 ./scripts/download-live-artifact.sh 29367425435
