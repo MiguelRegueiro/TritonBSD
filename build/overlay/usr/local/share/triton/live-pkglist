@@ -39,6 +39,7 @@ gsettings-desktop-schemas
 at-spi2-core
 fusefs-libs3
 bsdisks
+libudisks
 fusefs-ext2
 e2fsprogs
 fusefs-exfat
