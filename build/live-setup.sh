@@ -42,6 +42,19 @@ echo "Installing Triton live packages"
 mkdir -p "$ROOT/var/log/ConsoleKit"
 xargs env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" install -y < "$PKGLIST"
 
+# pkg -r does not run every package trigger inside the target root. Compile the
+# installed GSettings XML before sealing the image so GTK portals can start.
+GSETTINGS_SCHEMA_DIR=/usr/local/share/glib-2.0/schemas
+if [ ! -x "$ROOT/usr/local/bin/glib-compile-schemas" ]; then
+    echo "Missing GSettings schema compiler" >&2
+    exit 1
+fi
+chroot "$ROOT" /usr/local/bin/glib-compile-schemas "$GSETTINGS_SCHEMA_DIR"
+if [ ! -s "$ROOT$GSETTINGS_SCHEMA_DIR/gschemas.compiled" ]; then
+    echo "Failed to compile GSettings schemas" >&2
+    exit 1
+fi
+
 # pkg -r can leave the privileged D-Bus launcher in the builder's wheel group.
 # The system bus runs as messagebus and cannot activate root services such as
 # bsdisks unless that group can execute the setuid helper.
