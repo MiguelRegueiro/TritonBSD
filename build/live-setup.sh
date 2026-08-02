@@ -176,7 +176,10 @@ sysrc -f "$ROOT/etc/rc.conf" powerd_flags='-a hiadaptive -b adaptive -n adaptive
 sysrc -f "$ROOT/etc/rc.conf" kld_list="i915kms acpi_video ng_ubt ng_hci ng_l2cap ng_btsocket ext2fs fusefs"
 sysrc -f "$ROOT/etc/rc.conf" wlans_rtw880=wlan0
 sysrc -f "$ROOT/etc/rc.conf" create_args_wlan0="country ES regdomain ETSI"
-sysrc -f "$ROOT/etc/rc.conf" ifconfig_wlan0="WPA SYNCDHCP"
+# The installed system uses "WPA SYNCDHCP", but the live image has no
+# persistent /etc/wpa_supplicant.conf. Bring the clone up for scanning and let
+# QuickShell own the writable runtime supplicant config and DHCP lifecycle.
+sysrc -f "$ROOT/etc/rc.conf" ifconfig_wlan0="up"
 sysrc -f "$ROOT/etc/rc.conf" hcsecd_enable=YES
 sysrc -f "$ROOT/etc/rc.conf" bthidd_enable=YES
 

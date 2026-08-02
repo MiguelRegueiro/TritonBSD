@@ -81,14 +81,14 @@ for module in \
     kldload -n "$module" >> "$LOG" 2>&1 || true
 done
 
-# Wi-Fi is configured in rc.conf to mirror the known-good installed FreeBSD
-# setup from regueiro-hyprland docs/freebsd-hardware-notes.md:
+# Wi-Fi creation mirrors the known-good installed FreeBSD setup from
+# regueiro-hyprland docs/freebsd-hardware-notes.md:
 #   wlans_rtw880=wlan0
 #   create_args_wlan0="country ES regdomain ETSI"
-#   ifconfig_wlan0="WPA SYNCDHCP"
-# Do not manually kldload/create/toggle the rtw88 wlan here; doing so hit a
-# LinuxKPI net80211 panic on the live image while the installed rc.conf path is
-# known to work on the same laptop.
+# The live image deliberately uses ifconfig_wlan0="up" instead of the installed
+# system's "WPA SYNCDHCP": /etc is read-only and QuickShell owns the writable
+# runtime wpa_supplicant config plus DHCP. Do not manually kldload/create/cycle
+# the rtw88 wlan here; that hit a LinuxKPI net80211 panic on this laptop.
 
 service hcsecd onestart >> "$LOG" 2>&1 || true
 service bthidd onestart >> "$LOG" 2>&1 || true
