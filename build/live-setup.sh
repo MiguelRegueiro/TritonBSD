@@ -216,6 +216,9 @@ sysrc -f "$ROOT/etc/rc.conf" powerd_flags='-a hiadaptive -b adaptive -n adaptive
 sysrc -f "$ROOT/etc/rc.conf" kld_list="i915kms acpi_video ng_ubt ng_hci ng_l2cap ng_btsocket ext2fs fusefs"
 sysrc -f "$ROOT/etc/rc.conf" wlans_rtw880=wlan0
 sysrc -f "$ROOT/etc/rc.conf" create_args_wlan0="country ES regdomain ETSI"
+# Automatically request DHCP for dynamically named wired adapters such as ue0.
+# wlan0 keeps its explicit live configuration below and does not use this fallback.
+sysrc -f "$ROOT/etc/rc.conf" ifconfig_DEFAULT="DHCP"
 # The installed system uses "WPA SYNCDHCP", but the live image has no
 # persistent /etc/wpa_supplicant.conf. Bring the clone up for scanning and let
 # QuickShell own the writable runtime supplicant config and DHCP lifecycle.
