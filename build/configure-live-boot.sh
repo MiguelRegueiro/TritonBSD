@@ -272,16 +272,21 @@ echo
 
 cd "$HOME" 2>/dev/null || true
 
+if ! command -v ck-launch-session >/dev/null 2>&1; then
+    echo "ConsoleKit session launcher not found."
+    exit 78
+fi
+
 if command -v start-hyprland >/dev/null 2>&1; then
-    exec dbus-run-session start-hyprland
+    exec ck-launch-session dbus-run-session start-hyprland
 fi
 
 if command -v Hyprland >/dev/null 2>&1; then
-    exec dbus-run-session Hyprland
+    exec ck-launch-session dbus-run-session Hyprland
 fi
 
 if command -v hyprland >/dev/null 2>&1; then
-    exec dbus-run-session hyprland
+    exec ck-launch-session dbus-run-session hyprland
 fi
 
 echo "Hyprland executable not found."

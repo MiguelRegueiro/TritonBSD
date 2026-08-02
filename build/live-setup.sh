@@ -38,7 +38,29 @@ env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" bootstrap 
 env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" update -f
 
 echo "Installing Triton live packages"
+# consolekit2's post-install script expects this persistent log directory.
+mkdir -p "$ROOT/var/log/ConsoleKit"
 xargs env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" install -y < "$PKGLIST"
+
+# pkg -r can leave the privileged D-Bus launcher in the builder's wheel group.
+# The system bus runs as messagebus and cannot activate root services such as
+# bsdisks unless that group can execute the setuid helper.
+DBUS_LAUNCH_HELPER=/usr/local/libexec/dbus-daemon-launch-helper
+if [ ! -f "$ROOT$DBUS_LAUNCH_HELPER" ]; then
+    echo "Missing D-Bus launch helper: $DBUS_LAUNCH_HELPER" >&2
+    exit 1
+fi
+chroot "$ROOT" /usr/sbin/chown root:messagebus "$DBUS_LAUNCH_HELPER"
+chroot "$ROOT" /bin/chmod 4750 "$DBUS_LAUNCH_HELPER"
+if [ "$(chroot "$ROOT" /usr/bin/stat -f '%Su:%Sg:%Sp' "$DBUS_LAUNCH_HELPER")" != "root:messagebus:-rwsr-x---" ]; then
+    echo "Invalid D-Bus launch helper ownership or mode" >&2
+    exit 1
+fi
+if [ ! -x "$ROOT/usr/local/bin/ck-launch-session" ]; then
+    echo "Missing ConsoleKit session launcher" >&2
+    exit 1
+fi
+
 env ASSUME_ALWAYS_YES=yes pkg -o "PKG_CACHEDIR=$PKG_CACHE" -r "$ROOT" clean -ay
 rm -rf "$PKG_CACHE"
 
