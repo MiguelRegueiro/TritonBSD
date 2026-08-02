@@ -74,6 +74,14 @@ service dbus onestart >> "$LOG" 2>&1 || true
 service seatd onestart >> "$LOG" 2>&1 || true
 service powerd onestart >> "$LOG" 2>&1 || true
 
+# Keep a panic visible and make the live system remotely inspectable before
+# the compositor starts. Hardware/watchdog resets are unaffected by this.
+sysctl kern.panic_reboot_wait_time=-1 >> "$LOG" 2>&1 || true
+if [ -x /usr/local/sbin/triton-live-sshd ]; then
+    /usr/local/sbin/triton-live-sshd start >> "$LOG" 2>&1 || \
+        echo "Failed to start Triton live SSH; see $LOG" >&2
+fi
+
 for module in \
     ext2fs \
     fusefs \
@@ -101,6 +109,7 @@ clear
 echo "TritonBSD live environment"
 echo
 echo "Starting the Triton desktop on ttyv0."
+echo "SSH: triton@<live-ip> (password: triton)"
 echo "Log: $LOG"
 echo
 

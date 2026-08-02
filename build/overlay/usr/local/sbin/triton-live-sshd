@@ -3,7 +3,7 @@ set -eu
 
 KEY_DIR=${TRITON_LIVE_SSH_KEY_DIR:-/tmp/triton-ssh}
 CONFIG=${TRITON_LIVE_SSHD_CONFIG:-$KEY_DIR/sshd_config}
-PIDFILE=${TRITON_LIVE_SSHD_PIDFILE:-/var/run/triton-live-sshd.pid}
+PIDFILE=${TRITON_LIVE_SSHD_PIDFILE:-$KEY_DIR/sshd.pid}
 SSHD=${SSHD:-/usr/sbin/sshd}
 SSH_KEYGEN=${SSH_KEYGEN:-/usr/bin/ssh-keygen}
 
@@ -35,11 +35,15 @@ HostKey $KEY_DIR/ssh_host_ed25519_key
 PidFile $PIDFILE
 AuthorizedKeysFile .ssh/authorized_keys
 PasswordAuthentication yes
-KbdInteractiveAuthentication yes
+KbdInteractiveAuthentication no
 PermitRootLogin no
 UsePAM yes
 X11Forwarding no
-AllowTcpForwarding yes
+AllowTcpForwarding no
+PermitTunnel no
+PermitUserEnvironment no
+AllowUsers triton
+MaxAuthTries 3
 Subsystem sftp /usr/libexec/sftp-server
 EOF
     chmod 600 "$CONFIG"
@@ -63,7 +67,7 @@ start_sshd() {
     "$SSHD" -f "$CONFIG" -t
     "$SSHD" -f "$CONFIG"
     echo "triton live sshd started"
-    echo "Set a live password first if needed: doas passwd triton"
+    echo "login: triton (live password configured at image build time)"
 }
 
 stop_sshd() {

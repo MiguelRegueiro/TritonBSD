@@ -92,6 +92,24 @@ else
     chroot "$ROOT" /usr/sbin/pw usermod triton -s "$TRITON_SHELL"
 fi
 
+# The installer image intentionally exposes a fixed live-only account so it
+# can be inspected over SSH when the desktop or kernel becomes unstable.
+printf '%s\n' triton | chroot "$ROOT" /usr/sbin/pw usermod triton -h 0
+TRITON_PASSWORD_FIELD=$(/usr/bin/awk -F: '$1 == "triton" { print $2 }' "$ROOT/etc/master.passwd")
+case "$TRITON_PASSWORD_FIELD" in
+    ''|\**|!*)
+        echo "Failed to enable the Triton live password" >&2
+        exit 1
+        ;;
+esac
+
+for ssh_tool in /usr/sbin/sshd /usr/bin/ssh-keygen /usr/local/sbin/triton-live-sshd; do
+    if [ ! -x "$ROOT$ssh_tool" ]; then
+        echo "Missing live SSH component: $ssh_tool" >&2
+        exit 1
+    fi
+done
+
 for group in wheel operator video seatd realtime; do
     if chroot "$ROOT" /usr/sbin/pw groupshow "$group" >/dev/null 2>&1; then
         chroot "$ROOT" /usr/sbin/pw groupmod "$group" -m triton
