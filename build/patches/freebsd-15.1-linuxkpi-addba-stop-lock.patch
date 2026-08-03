@@ -1,0 +1,13 @@
+--- sys/compat/linuxkpi/common/src/linux_80211.c.orig
++++ sys/compat/linuxkpi/common/src/linux_80211.c
+@@ -6186,0 +6187 @@
++	bool ic_locked;
+@@ -6214 +6215,3 @@
+-	IEEE80211_UNLOCK(ic);
++	ic_locked = IEEE80211_IS_LOCKED(ic);
++	if (ic_locked)
++		IEEE80211_UNLOCK(ic);
+@@ -6218 +6221,2 @@
+-	IEEE80211_LOCK(ic);
++	if (ic_locked)
++		IEEE80211_LOCK(ic);

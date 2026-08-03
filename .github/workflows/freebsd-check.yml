@@ -29,6 +29,7 @@ jobs:
             sh -n build/configure-live-boot.sh
             sh -n build/build-release.sh
             sh -n build/build-remix-image.sh
+            sh -n build/install-patched-live-kernel.sh
             sh -n build/live-setup.sh
             sh -n installer/triton-install
             sh -n build/overlay/usr/local/bin/triton-install

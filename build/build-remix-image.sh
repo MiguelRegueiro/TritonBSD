@@ -119,6 +119,10 @@ if [ "$WITH_LIVE_DESKTOP" = "1" ]; then
 fi
 mount -o noatime "$ROOT_PART" "$MNT"
 
+if [ "$WITH_LIVE_DESKTOP" = "1" ]; then
+    "$PROJECT_DIR/build/install-patched-live-kernel.sh" "$MNT"
+fi
+
 echo "Applying Triton overlay"
 tar -C "$PROJECT_DIR/build/overlay" -cf - . | tar -C "$MNT" -xpf -
 
