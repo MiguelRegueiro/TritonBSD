@@ -49,7 +49,8 @@ if [ ! -x "$ROOT/usr/local/bin/glib-compile-schemas" ]; then
     echo "Missing GSettings schema compiler" >&2
     exit 1
 fi
-chroot "$ROOT" /usr/local/bin/glib-compile-schemas "$GSETTINGS_SCHEMA_DIR"
+chroot "$ROOT" /usr/bin/env LD_LIBRARY_PATH=/usr/local/lib \
+    /usr/local/bin/glib-compile-schemas "$GSETTINGS_SCHEMA_DIR"
 if [ ! -s "$ROOT$GSETTINGS_SCHEMA_DIR/gschemas.compiled" ]; then
     echo "Failed to compile GSettings schemas" >&2
     exit 1
