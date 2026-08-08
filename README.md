@@ -1,4 +1,6 @@
-# TritonBSD
+<h1 align="center">
+  <img src="assets/branding/tritonbsd-logo-horizontal.png" alt="TritonBSD logo" width="320">
+</h1>
 
 TritonBSD is a FreeBSD desktop remix: stock FreeBSD under the hood, plus a
 Triton live environment, installer wrapper, and Hyprland + QuickShell desktop
