@@ -105,12 +105,19 @@ the same pkg list.
 
 ## Installer Flow
 
-Do not hand-roll disk installation first. Use FreeBSD tools underneath:
+The current `triton-install` implementation is a native Rust/Ratatui installer prototype
+backed by a fixed-verb POSIX shell model. It performs fail-closed, read-only disk
+discovery and revalidates the exact selected target. It contains no privileged
+or disk-writing backend.
+
+Do not hand-roll disk installation first. Once the prototype is proven, add the
+destructive executor as a separately reviewed layer over FreeBSD tools:
 
 ```text
 triton-install
-  -> select target disk
+  -> select and revalidate target disk
   -> select filesystem mode
+  -> explicit destructive confirmation
   -> call bsdinstall partition/extract/boot steps
   -> chroot post-install
 ```

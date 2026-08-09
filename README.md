@@ -14,8 +14,9 @@ branch.
 TritonBSD currently boots into a working live desktop with Hyprland,
 QuickShell, Wi-Fi, and Ethernet support.
 
-The next major milestone is `triton-install`, which will install that environment
-as a persistent TritonBSD system.
+`triton-install` is currently a non-destructive installer prototype. The next
+major milestone is the separately reviewed backend that installs the live
+environment as a persistent TritonBSD system.
 
 ## How It Works
 

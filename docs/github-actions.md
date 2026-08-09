@@ -1,49 +1,44 @@
 # GitHub Actions Builds
 
-GitHub Actions does not provide native FreeBSD hosted runners. The workflows in
-this repo use `vmactions/freebsd-vm`, which boots a FreeBSD VM under an Ubuntu
-runner.
+GitHub Actions does not provide native FreeBSD hosted runners. The live-image
+workflow uses `vmactions/freebsd-vm` to boot FreeBSD under an Ubuntu runner.
 
 ## Workflows
 
-`FreeBSD Check`
+`CI`
 
-Runs shell syntax checks inside a FreeBSD 15.1 VM.
+Runs formatting, Clippy, Rust tests, installer model tests, safety checks, and
+shell syntax checks on pull requests and pushes to `main`. Pull requests stop
+after those fast checks. Pushes to `main` also cross-build the FreeBSD installer
+and upload it as a commit-specific artifact.
 
-`Build Bootstrap Image`
+`Build Live Desktop Image`
 
-Manually triggered. It downloads the official FreeBSD 15.1 memstick image,
-verifies the SHA512 checksum, mounts it with FreeBSD tools, injects the Triton
-overlay, compresses the result, and uploads it as a workflow artifact.
+Manually triggered. It requires the verified installer artifact produced by CI
+for the same commit, then boots a FreeBSD VM and builds the TritonBSD live desktop
+memstick. This is the only supported image workflow.
 
-The artifact is a `.img.xz` memstick image, not a final desktop ISO yet.
-It still shows the normal FreeBSD installer. That is expected for the bootstrap
-stage.
+The image workflow is intentionally manual because installing the desktop and
+building the compressed image is slow. Ordinary pull requests never build an
+image or start a FreeBSD VM.
 
-## Why Bootstrap First
+## Installer Artifact Handoff
 
-Standard GitHub-hosted runners have limited disk space. A full FreeBSD
-`release.sh` source build is likely too large and slow for the free/default
-runner. The bootstrap image proves the CI path and gives us something bootable
-to test before we invest in the full live desktop image.
-
-## Expected First Artifact
+CI uploads:
 
 ```text
-TritonBSD-15.1-RELEASE-amd64-bootstrap-memstick.img.xz
+triton-installer-freebsd-amd64-<commit SHA>
 ```
 
-This should boot like FreeBSD's normal memstick image, but with:
+The live-image workflow accepts only a successful `main` push artifact for the
+exact commit being built. This prevents a stale installer binary from entering
+the image.
+
+The image workflow uploads:
 
 ```text
-/usr/local/bin/triton-install
-/usr/local/etc/pkg/repos/FreeBSD.conf
-/usr/local/share/triton/pkglist
-/usr/local/share/triton/docs
+TritonBSD-15.1-RELEASE-amd64-live-memstick.img.xz
 ```
-
-It will not yet boot straight into Hyprland. That comes after we add desktop
-package installation into the live root and configure live-user startup.
 
 ## Download And Test An Artifact
 
@@ -90,19 +85,4 @@ set -x QEMU_SERIAL log
 set -e QEMU_GL
 set -e QEMU_SERIAL
 tail -f artifacts/qemu-serial.log
-```
-
-## Full Image Later
-
-For the real TritonBSD image, use one of these:
-
-1. A self-hosted FreeBSD runner with enough disk.
-2. A paid/larger GitHub runner.
-3. A separate FreeBSD build server.
-
-Then run the source-build path:
-
-```sh
-./build/fetch-freebsd-src.sh
-./build/build-release.sh
 ```

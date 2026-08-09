@@ -65,7 +65,7 @@ stock memstick hook.
 
 Recommended MVP:
 
-1. Keep `Build Bootstrap Image` only as a smoke test for image mounting.
+1. Retire the bootstrap artifact and keep the live-image workflow as the only image builder.
 2. Use a TrueOS-style handoff for the next test image:
    - replace the stock installer `/etc/rc.local`
    - start live services there

@@ -43,21 +43,25 @@ that is working, the next script will mount the image and apply
 
 ## Step 3: Apply Triton Overlay
 
-The overlay currently contains:
+The overlay contains static image configuration:
 
 ```text
-/usr/local/bin/triton-install
 /usr/local/etc/pkg/repos/FreeBSD.conf
 /usr/local/share/triton/pkglist
 ```
 
-Next we need to add:
+For live desktop images, `build/install-installer.sh` installs the stable
+`/usr/local/bin/triton-install` entry point, commit-matched Rust UI, fixed model
+bridge, shell model, and demo fixture under `/usr/local/libexec/triton` and
+`/usr/local/share/triton`. The manual live-image workflow requires the verified
+installer artifact produced by CI for the same commit.
+
+The remaining image work includes:
 
 ```text
-live user setup
-desktop skeleton
-autologin or graphical startup
-post-install scripts
+physical hardware validation
+broader GPU and Wi-Fi coverage
+the destructive installation backend
 ```
 
 ## Latest FreeBSD vs Latest Packages
