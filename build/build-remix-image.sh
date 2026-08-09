@@ -126,6 +126,10 @@ fi
 echo "Applying Triton overlay"
 tar -C "$PROJECT_DIR/build/overlay" -cf - . | tar -C "$MNT" -xpf -
 
+if [ "$WITH_LIVE_DESKTOP" = "1" ]; then
+    "$PROJECT_DIR/build/install-installer.sh" "$MNT"
+fi
+
 mkdir -p "$MNT/usr/local/share/triton/docs"
 cp "$PROJECT_DIR/README.md" "$MNT/usr/local/share/triton/docs/PROJECT-README.md"
 cp "$PROJECT_DIR/docs/how-it-works.md" "$MNT/usr/local/share/triton/docs/how-it-works.md"
