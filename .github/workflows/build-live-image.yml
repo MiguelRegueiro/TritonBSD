@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
@@ -13,10 +14,24 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Download verified installer for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p installer/dist
+          run_id=$(gh api "/repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=push&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          [ -n "$run_id" ] || {
+            echo "No successful CI installer artifact exists for $GITHUB_SHA" >&2
+            exit 1
+          }
+          gh run download "$run_id" --name "triton-installer-freebsd-amd64-$GITHUB_SHA" --dir installer/dist
+          chmod 755 installer/dist/triton-installer-ui
+          file installer/dist/triton-installer-ui | grep -q 'FreeBSD.*x86-64\|x86-64.*FreeBSD'
 
       - name: Build TritonBSD live desktop memstick in FreeBSD VM
-        uses: vmactions/freebsd-vm@v1
+        uses: vmactions/freebsd-vm@83b151f58c6047089f4c80eb5ba2039d158ce093 # v1
         with:
           release: "15.1"
           usesh: true
@@ -32,7 +47,7 @@ jobs:
             ./build/build-remix-image.sh
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tritonbsd-live-memstick
           path: artifacts/*-live-memstick.img.xz

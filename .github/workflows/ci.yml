@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache installer build inputs
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            installer/target
+            ~/.cache/triton-installer-target
+            ~/.cache/freebsd-15.1-base.txz
+            ~/.cache/freebsd-15.1-sysroot
+          key: installer-freebsd-15.1-${{ runner.os }}-${{ hashFiles('installer/Cargo.lock') }}
+
+      - name: Check Rust formatting
+        run: cargo fmt --check --manifest-path installer/Cargo.toml
+
+      - name: Lint Rust frontend
+        run: cargo clippy --locked --all-targets --manifest-path installer/Cargo.toml -- -D warnings
+
+      - name: Test Rust frontend
+        run: cargo test --locked --manifest-path installer/Cargo.toml
+
+      - name: Test installer model and safety boundary
+        run: installer/tests/run.sh
+
+      - name: Check shell syntax
+        run: |
+          for script in build/*.sh installer/triton-install installer/libexec/triton/triton-model-bridge; do
+            sh -n "$script"
+          done
+
+      - name: Install FreeBSD cross-build tools
+        if: github.event_name != 'pull_request'
+        run: sudo apt-get update && sudo apt-get install -y clang lld
+
+      - name: Build FreeBSD installer
+        if: github.event_name != 'pull_request'
+        run: build/build-installer.sh
+
+      - name: Test installed image layout
+        if: github.event_name != 'pull_request'
+        run: build/test-installer-layout.sh
+
+      - name: Upload FreeBSD installer
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: triton-installer-freebsd-amd64-${{ github.sha }}
+          path: installer/dist/triton-installer-ui
+          if-no-files-found: error
+          retention-days: 30
