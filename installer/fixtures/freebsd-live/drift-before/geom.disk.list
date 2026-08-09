@@ -1,0 +1,17 @@
+Geom name: da0
+Providers:
+1. Name: da0
+   Mediasize: 64000000000 (synthetic)
+   Sectorsize: 512
+   descr: Synthetic Live USB
+   ident: LIVE001
+   transport: USB
+
+Geom name: nda0
+Providers:
+1. Name: nda0
+   Mediasize: 500000000000 (synthetic)
+   Sectorsize: 512
+   descr: Synthetic Target
+   ident: STABLE001
+   transport: NVMe

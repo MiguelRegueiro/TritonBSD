@@ -1,0 +1,1 @@
+synthetic gpart show -p

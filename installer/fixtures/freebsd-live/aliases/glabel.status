@@ -1,0 +1,4 @@
+Name Status Components
+diskid/DISK-LIVE N/A da0
+ufs/DATA N/A ada0p1
+diskid/DISK-TARGET N/A nda0

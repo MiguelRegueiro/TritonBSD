@@ -1,0 +1,179 @@
+#!/bin/sh
+# Narrow fixed-verb bridge between the Rust frontend and the shell model.
+set -eu
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -r "$SCRIPT_DIR/lib/common.sh" ]; then
+	ROOT=$SCRIPT_DIR
+else
+	ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
+fi
+: "${TRITON_RUNTIME_DIR:?}"
+: "${TRITON_STATE_FILE:?}"
+
+. "$ROOT/lib/common.sh"
+. "$ROOT/lib/validate.sh"
+. "$ROOT/lib/state.sh"
+. "$ROOT/lib/discover.sh"
+. "$ROOT/lib/plan.sh"
+
+bridge_runtime_valid() {
+	case $TRITON_RUNTIME_DIR in
+	/*) : ;;
+	*) return 1 ;;
+	esac
+	_bridge_runtime_canonical=$(CDPATH= cd -P -- "$TRITON_RUNTIME_DIR" 2>/dev/null && pwd -P) || return 1
+	[ "$TRITON_RUNTIME_DIR" = "$_bridge_runtime_canonical" ] || return 1
+	[ "$TRITON_STATE_FILE" = "$TRITON_RUNTIME_DIR/installer.state" ] || return 1
+	[ -d "$TRITON_RUNTIME_DIR" ] && [ ! -L "$TRITON_RUNTIME_DIR" ] || return 1
+	[ "$(triton_stat_uid "$TRITON_RUNTIME_DIR")" = "$(id -u)" ] || return 1
+	[ "$(triton_stat_mode "$TRITON_RUNTIME_DIR")" = 700 ]
+}
+
+bridge_private_path() {
+	case $1 in
+	"$TRITON_RUNTIME_DIR/inventory.tsv" | "$TRITON_RUNTIME_DIR/selected-target.tsv") : ;;
+	*) return 1 ;;
+	esac
+	[ ! -L "$1" ]
+}
+
+bridge_field() {
+	_bridge_file=$1
+	_bridge_target=$2
+	_bridge_name=$3
+	awk -F '\t' -v target="$_bridge_target" -v name="$_bridge_name" '
+        NR==1 { for(i=1;i<=NF;i++) h[$i]=i; next }
+        $h["path"]==target { print $h[name]; found++ }
+        END { if(found != 1) exit 1 }
+    ' "$_bridge_file"
+}
+
+bridge_discover() {
+	_bridge_out=$1
+	bridge_private_path "$_bridge_out" || return 1
+	rm -f "$_bridge_out"
+	if [ -n "${TRITON_DISCOVERY_FIXTURE:-}" ]; then
+		discover_parse "$TRITON_DISCOVERY_FIXTURE" "$_bridge_out"
+	else
+		_bridge_capture=$TRITON_RUNTIME_DIR/discovery.$$
+		discover_collect "$_bridge_capture" && discover_parse "$_bridge_capture" "$_bridge_out"
+	fi
+}
+
+bridge_revalidate() {
+	_bridge_inventory=$1
+	_bridge_snapshot=$2
+	bridge_private_path "$_bridge_inventory" && bridge_private_path "$_bridge_snapshot" || return 1
+	state_target_complete || return 1
+	if ! bridge_discover "$_bridge_inventory"; then
+		rm -f "$_bridge_snapshot"
+		state_clear_target
+		return 1
+	fi
+	if plan_verify_target_snapshot "$_bridge_snapshot" "$_bridge_inventory"; then
+		return 0
+	fi
+	rm -f "$_bridge_snapshot"
+	state_clear_target
+	return 1
+}
+
+bridge_dump_state() {
+	LC_ALL=C awk -F= '
+        BEGIN { digits = "0123456789abcdef" }
+        {
+            decoded = ""
+            for (i = 1; i <= length($2); i += 2) {
+                hi = index(digits, substr($2, i, 1)) - 1
+                lo = index(digits, substr($2, i + 1, 1)) - 1
+                decoded = decoded sprintf("%c", hi * 16 + lo)
+            }
+            print $1 "	" decoded
+        }
+    ' "$TRITON_STATE_FILE"
+}
+
+bridge_runtime_valid || exit 1
+[ "$#" -ge 1 ] || exit 64
+_bridge_cmd=$1
+shift
+case $_bridge_cmd in
+state-init)
+	[ "$#" -eq 0 ] || exit 64
+	state_init
+	;;
+state-dump)
+	[ "$#" -eq 0 ] || exit 64
+	state_check
+	bridge_dump_state
+	;;
+set)
+	[ "$#" -eq 2 ] || exit 64
+	if [ "$1" = TIMEZONE ] && [ "$2" != UTC ]; then
+		[ -f "/usr/share/zoneinfo/$2" ] || exit 2
+	fi
+	state_set "$1" "$2"
+	bridge_dump_state
+	;;
+set-user)
+	[ "$#" -eq 3 ] || exit 64
+	state_set_user "$1" "$2" "$3"
+	bridge_dump_state
+	;;
+set-swap)
+	[ "$#" -eq 2 ] || exit 64
+	state_set_swap "$1" "$2"
+	bridge_dump_state
+	;;
+discover)
+	[ "$#" -eq 1 ] || exit 64
+	bridge_discover "$1"
+	;;
+select-target)
+	[ "$#" -eq 3 ] || exit 64
+	_bridge_inventory=$1
+	_bridge_target=$2
+	_bridge_snapshot=$3
+	bridge_private_path "$_bridge_inventory" && bridge_private_path "$_bridge_snapshot"
+	[ -f "$_bridge_inventory" ] && [ ! -L "$_bridge_inventory" ]
+	_bridge_available=$(bridge_field "$_bridge_inventory" "$_bridge_target" available)
+	[ "$_bridge_available" = yes ] || exit 2
+	_bridge_model=$(bridge_field "$_bridge_inventory" "$_bridge_target" descr)
+	_bridge_serial=$(bridge_field "$_bridge_inventory" "$_bridge_target" ident)
+	_bridge_bytes=$(bridge_field "$_bridge_inventory" "$_bridge_target" bytes)
+	_bridge_sector=$(bridge_field "$_bridge_inventory" "$_bridge_target" sector_size)
+	state_set_target "$_bridge_target" "$_bridge_model" "$_bridge_serial" "$_bridge_bytes" "$_bridge_sector" yes
+	rm -f "$_bridge_snapshot"
+	plan_snapshot_target "$_bridge_inventory" "$_bridge_snapshot"
+	bridge_dump_state
+	;;
+revalidate)
+	[ "$#" -eq 2 ] || exit 64
+	bridge_revalidate "$1" "$2"
+	;;
+plan-report)
+	[ "$#" -eq 0 ] || exit 64
+	plan_validation_report
+	;;
+plan-render)
+	[ "$#" -eq 0 ] || exit 64
+	plan_render
+	;;
+validate)
+	[ "$#" -eq 2 ] || exit 64
+	plan_validate
+	bridge_revalidate "$1" "$2"
+	plan_validate
+	;;
+network)
+	[ "$#" -eq 0 ] || exit 64
+	_bridge_iface=$(route -n get default 2>/dev/null | awk '/interface:/{print $2; exit}')
+	if [ -n "$_bridge_iface" ]; then
+		_bridge_addr=$(ifconfig "$_bridge_iface" 2>/dev/null | awk '/inet /{print $2; exit}')
+		printf 'connected\t%s\t%s\n' "$_bridge_iface" "$_bridge_addr"
+	else
+		printf '%s\n' 'offline'
+	fi
+	;;
+*) exit 64 ;;
+esac

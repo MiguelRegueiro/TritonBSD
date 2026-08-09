@@ -1,0 +1,39 @@
+Geom name: da0
+scheme: MBR
+Providers:
+1. Name: da0s1
+   Mediasize: 34091008 (synthetic)
+   Sectorsize: 512
+   type: efi
+2. Name: da0s2
+   Mediasize: 12850810368 (synthetic)
+   Sectorsize: 512
+   type: freebsd
+Consumers:
+1. Name: da0
+   Mediasize: 1 (synthetic)
+   Sectorsize: 512
+
+Geom name: da0s2
+scheme: BSD
+Providers:
+1. Name: da0s2a
+   Mediasize: 12850802176 (synthetic)
+   Sectorsize: 512
+   type: freebsd-ufs
+Consumers:
+1. Name: da0s2
+   Mediasize: 1 (synthetic)
+   Sectorsize: 512
+
+Geom name: nda0
+scheme: GPT
+Providers:
+1. Name: nda0p1
+   Mediasize: 500000000000 (synthetic)
+   Sectorsize: 512
+   type: freebsd-zfs
+Consumers:
+1. Name: nda0
+   Mediasize: 1 (synthetic)
+   Sectorsize: 512

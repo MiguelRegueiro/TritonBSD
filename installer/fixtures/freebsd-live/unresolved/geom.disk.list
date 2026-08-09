@@ -1,0 +1,8 @@
+Geom name: nda0
+Providers:
+1. Name: nda0
+   Mediasize: 500000000000 (synthetic)
+   Sectorsize: 512
+   descr: Synthetic Target
+   ident: TARGET003
+   transport: NVMe

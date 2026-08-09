@@ -1,0 +1,8 @@
+kern.disks=ok
+mount.p=ok
+swapinfo.k=ok
+glabel.status=ok
+geom.disk.list=ok
+geom.part.list=failed
+gpart.show.p=ok
+camcontrol.devlist=failed

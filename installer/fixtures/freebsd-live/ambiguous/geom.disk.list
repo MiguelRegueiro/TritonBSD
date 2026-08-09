@@ -1,0 +1,17 @@
+Geom name: ada0
+Providers:
+1. Name: ada0
+   Mediasize: 100000000000 (synthetic)
+   Sectorsize: 512
+   descr: Synthetic A
+   ident: A001
+   transport: SATA
+
+Geom name: ada1
+Providers:
+1. Name: ada1
+   Mediasize: 100000000000 (synthetic)
+   Sectorsize: 512
+   descr: Synthetic B
+   ident: B001
+   transport: SATA

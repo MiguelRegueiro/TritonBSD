@@ -1,0 +1,23 @@
+Geom name: da0
+scheme: GPT
+Providers:
+1. Name: da0p1
+   Mediasize: 8000000000 (synthetic)
+   Sectorsize: 512
+   type: freebsd-ufs
+Consumers:
+1. Name: da0
+   Mediasize: 1 (synthetic)
+   Sectorsize: 512
+
+Geom name: ada2
+scheme: GPT
+Providers:
+1. Name: ada2p1
+   Mediasize: 119000000000 (synthetic)
+   Sectorsize: 512
+   type: freebsd-ufs
+Consumers:
+1. Name: ada2
+   Mediasize: 1 (synthetic)
+   Sectorsize: 512
