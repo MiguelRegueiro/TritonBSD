@@ -1,18 +1,118 @@
 #!/bin/sh
 set -eu
 
-cat <<'EOF'
-Triton installer is not implemented yet.
+SCRIPT=$0
+while [ -L "$SCRIPT" ]; do
+	TARGET=$(readlink "$SCRIPT")
+	case $TARGET in
+	/*) SCRIPT=$TARGET ;;
+	*) SCRIPT=$(dirname -- "$SCRIPT")/$TARGET ;;
+	esac
+done
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$SCRIPT")" && pwd)
 
-MVP installer flow:
-  1. list disks
-  2. choose target disk
-  3. confirm destructive install
-  4. create UEFI + GPT + UFS layout
-  5. install FreeBSD base with bsdinstall
-  6. install Triton packages from /usr/local/share/triton/pkglist
-  7. create user and copy Triton desktop skeleton
+INSTALLED_HELPERS=/usr/local/libexec/triton
+if [ "$SCRIPT_DIR" = /usr/local/bin ]; then
+	UI=$INSTALLED_HELPERS/triton-ui
+	BRIDGE=$INSTALLED_HELPERS/triton-model-bridge
+	FIXTURES=/usr/local/share/triton/installer-fixtures
+else
+	UI=$SCRIPT_DIR/target/release/triton-installer-ui
+	BRIDGE=$SCRIPT_DIR/libexec/triton/triton-model-bridge
+	FIXTURES=$SCRIPT_DIR/fixtures/freebsd-live
+fi
 
-Read docs/how-it-works.md before implementing this.
+usage() {
+	cat <<'EOF'
+Usage: triton-install [--demo | --check | --help]
+
+Interactive, non-destructive TritonBSD installer.
+
+  --demo   Use synthetic disks to evaluate the UX
+  --check  Check live-environment prerequisites without opening the UI
+  --help   Show this help
+
+This version contains no disk-writing backend and never requests root.
 EOF
+}
 
+check_prerequisites() {
+	failed=0
+	if [ "$(uname -s)" = FreeBSD ]; then
+		printf '%s\n' '[ok] FreeBSD host'
+	else
+		printf '%s\n' '[fail] FreeBSD host'
+		failed=1
+	fi
+	for command_name in awk grep od stat cmp stty mktemp sysctl mount swapinfo glabel geom gpart route ifconfig; do
+		if command -v "$command_name" >/dev/null 2>&1; then
+			printf '[ok] %s\n' "$command_name"
+		else
+			printf '[fail] %s\n' "$command_name"
+			failed=1
+		fi
+	done
+	[ -x "$UI" ] || {
+		printf '%s\n' '[fail] native Rust UI'
+		failed=1
+	}
+	[ -x "$BRIDGE" ] || {
+		printf '%s\n' '[fail] fixed model bridge'
+		failed=1
+	}
+	printf '%s\n' '[safe] no root or disk-writing backend is present'
+	[ "$failed" -eq 0 ]
+}
+
+mode=live
+case ${1:-} in
+'') : ;;
+--demo) mode=demo ;;
+--check)
+	check_prerequisites
+	exit
+	;;
+--help | -h)
+	usage
+	exit 0
+	;;
+*)
+	usage >&2
+	exit 64
+	;;
+esac
+[ "$#" -le 1 ] || {
+	usage >&2
+	exit 64
+}
+
+[ "$(id -u)" -ne 0 ] || {
+	printf '%s\n' 'Refusing to run the UI as root. Use the live triton account.' >&2
+	exit 1
+}
+[ -t 0 ] && [ -t 1 ] || {
+	printf '%s\n' 'An interactive terminal is required.' >&2
+	exit 1
+}
+[ "${TERM:-dumb}" != dumb ] || {
+	printf '%s\n' 'TERM=dumb is not supported. Run triton-install from a real terminal.' >&2
+	exit 1
+}
+[ -x "$UI" ] || {
+	printf '%s\n' 'The native installer UI is missing.' >&2
+	exit 1
+}
+[ -x "$BRIDGE" ] || {
+	printf '%s\n' 'The installer model bridge is missing.' >&2
+	exit 1
+}
+
+umask 077
+unset TRITON_DISCOVERY_FIXTURE
+if [ "$mode" = demo ]; then
+	TRITON_DISCOVERY_FIXTURE=$FIXTURES/gpt
+	export TRITON_DISCOVERY_FIXTURE
+fi
+TRITON_BRIDGE=$BRIDGE
+export TRITON_BRIDGE
+exec "$UI"
